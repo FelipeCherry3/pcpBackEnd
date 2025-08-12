@@ -71,4 +71,8 @@ public class BlingAuthController {
     public Mono<Map> getProdutos() {
         return blingAuthService.getProdutos();
     }
+
+    public Mono<Map> getPedidos() {
+        return blingAuthService.getPedidos();
+    }
 }

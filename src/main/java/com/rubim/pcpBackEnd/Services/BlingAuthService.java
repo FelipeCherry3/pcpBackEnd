@@ -117,4 +117,16 @@ public class BlingAuthService {
                     .flatMap(error -> Mono.error(new RuntimeException("Falha na requisição à API: " + error))))
             .bodyToMono(Map.class));
     }
+
+    public Mono<Map> getPedidos() {
+        return obterAccessTokenValido()
+            .flatMap(token -> webClient.get()
+                .uri("https://api.bling.com.br/Api/v3/pedidos")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .onStatus(status -> status.is4xxClientError() || status.is5xxServerError(),
+                    response -> response.bodyToMono(String.class)
+                        .flatMap(error -> Mono.error(new RuntimeException("Falha na requisição à API: " + error))))
+                .bodyToMono(Map.class));
+    }
 }

@@ -19,8 +19,6 @@ public class PedidoVendaResponse {
     private Date dataEntrega;
     private Date dataPrevista;
     private Integer total;
-    private String cliente;
+    private ClienteDTOResponse cliente;
     private List<ItemPedidoResponse> itens;
-
-    // Getters and Setters
 }

@@ -20,6 +20,5 @@ public class ItemPedidoResponse {
     private Integer quantidade;
     private String descricaoDetalhada;
     private Produto produto;
-    private ClienteDTOResponse cliente;
     private PedidoVendaResponse pedidoVenda;
 }
