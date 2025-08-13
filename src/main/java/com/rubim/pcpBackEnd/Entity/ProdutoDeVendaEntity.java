@@ -53,6 +53,7 @@ public class ProdutoDeVendaEntity {
     private String corMadeira;
     private String corRevestimento;
     private String medidasTampo;
+    
 	@Column(columnDefinition = "TEXT")
     private String descricao;
 

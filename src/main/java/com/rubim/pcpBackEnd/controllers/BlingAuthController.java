@@ -49,7 +49,6 @@ public class BlingAuthController {
     @GetMapping("/callback")
     public Mono<String> handleCallback(@RequestParam("code") String code, @RequestParam("state") String state) {
         // Validar state (comparar com o valor salvo anteriormente)
-        // Para este exemplo, apenas logamos o state
         // Em produção, valide contra o state salvo
         if (state == null || state.isEmpty()) {
             return Mono.error(new IllegalStateException("State inválido ou ausente."));
