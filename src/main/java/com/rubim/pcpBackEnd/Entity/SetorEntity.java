@@ -5,13 +5,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Data;
 
-@Table(name = "contato")
-@Data
+
 @Entity
-public class ContatoEntity {
+@Data
+@Table(name = "setor")
+public class SetorEntity {
     @Id
-    private Long id;
-	private String nome;
-	private String tipoPessoa;
-	private String numeroDocumento;
+    private String id;
+    private String nome;
+    private String descricao;
+    
 }

@@ -32,7 +32,7 @@ public class ProdutoDeVendaEntity {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "pedido_id", nullable = false)
-    private PedidosVendaEntity pedidosVenda;
+    private PedidosVendaEntity pedido;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "produto_id", nullable = false)
@@ -50,8 +50,14 @@ public class ProdutoDeVendaEntity {
     
     @Column(precision = 10, scale = 2)
 	private BigDecimal valor;
+
+    @Column
     private String corMadeira;
+
+    @Column
     private String corRevestimento;
+
+    @Column
     private String medidasTampo;
     
 	@Column(columnDefinition = "TEXT")

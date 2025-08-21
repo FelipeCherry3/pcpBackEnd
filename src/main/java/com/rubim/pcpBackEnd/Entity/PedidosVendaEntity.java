@@ -75,6 +75,10 @@ public class PedidosVendaEntity {
     @Column(columnDefinition = "TEXT")
     private String observacoesInternas;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "setor_id")
+    private SetorEntity setor;
+
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @ToString.Exclude
