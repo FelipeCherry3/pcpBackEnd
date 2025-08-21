@@ -10,6 +10,6 @@ import lombok.Data;
 @Entity
 public class SituacaoEntity {
     @Id
-    private String id;
+    private Long id;
     private String valor;
 }

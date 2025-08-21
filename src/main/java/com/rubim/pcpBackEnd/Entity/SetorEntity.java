@@ -11,7 +11,7 @@ import lombok.Data;
 @Table(name = "setor")
 public class SetorEntity {
     @Id
-    private String id;
+    private Long id;
     private String nome;
     private String descricao;
     

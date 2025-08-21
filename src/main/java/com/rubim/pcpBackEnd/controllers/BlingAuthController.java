@@ -71,6 +71,7 @@ public class BlingAuthController {
         return blingAuthService.getProdutos();
     }
 
+    @GetMapping("/sincronizarPedidos")
     public Mono<Map> getPedidos() {
         return blingAuthService.getPedidos();
     }
