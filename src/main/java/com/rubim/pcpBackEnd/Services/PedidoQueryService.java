@@ -5,6 +5,7 @@ import com.rubim.pcpBackEnd.Entity.ProdutoDeVendaEntity;
 import com.rubim.pcpBackEnd.Entity.SetorEntity;
 import com.rubim.pcpBackEnd.Entity.ContatoEntity;
 import com.rubim.pcpBackEnd.repository.PedidosVendaRepository;
+import com.rubim.pcpBackEnd.repository.SetorRepository;
 import com.rubim.pcpBackEnd.utils.JsonParserUtil;
 // seus DTOs:
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
@@ -21,14 +22,17 @@ import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class PedidoQueryService {
 
     private final PedidosVendaRepository pedidosRepo;
+    private final SetorRepository setorRepo;
 
-    public PedidoQueryService(PedidosVendaRepository pedidosRepo) {
+    public PedidoQueryService(PedidosVendaRepository pedidosRepo, SetorRepository setorRepo) {
         this.pedidosRepo = pedidosRepo;
+        this.setorRepo = setorRepo;
     }
 
     /**
@@ -136,15 +140,15 @@ public class PedidoQueryService {
                 : (dto.getDescricao() != null ? dto.getDescricao() : "");
 
         // TODO: Exemplo de padrões — ajuste para o seu caso real.
-        // Pattern pMadeira = Pattern.compile("Madeira:\\s*([\\w\\s]+)", Pattern.CASE_INSENSITIVE);
+        // Pattern pMadeira = Pattern.compile("Madeira:\s*([\w\s]+)", Pattern.CASE_INSENSITIVE);
         // Matcher m1 = pMadeira.matcher(base);
         // if (m1.find()) dto.setCorMadeira(m1.group(1).trim());
 
-        // Pattern pRevest = Pattern.compile("Revestimento:\\s*([\\w\\s]+)", Pattern.CASE_INSENSITIVE);
+        // Pattern pRevest = Pattern.compile("Revestimento:\s*([\w\s]+)", Pattern.CASE_INSENSITIVE);
         // Matcher m2 = pRevest.matcher(base);
         // if (m2.find()) dto.setCorRevestimento(m2.group(1).trim());
 
-        // Pattern pMedidas = Pattern.compile("Medidas?:\\s*([^;\\n]+)", Pattern.CASE_INSENSITIVE);
+        // Pattern pMedidas = Pattern.compile("Medidas?:\s*([^;\n]+)", Pattern.CASE_INSENSITIVE);
         // Matcher m3 = pMedidas.matcher(base);
         // if (m3.find()) dto.setDetalhesMedidas(m3.group(1).trim());
 
@@ -163,5 +167,17 @@ public class PedidoQueryService {
         // cli.setDocumento(c.getNumeroDocumento());
         // return cli;
         return null; // por hora, retorne null até mapear seus campos reais
+    }
+
+    public String atualizarSetorDePedido(Long idPedido, Long idSetor) {
+        Optional<SetorEntity> setor = setorRepo.findById(idSetor);
+        // TODO: implementar lógica de atualização de setor
+        Optional<PedidosVendaEntity> pedido = pedidosRepo.findById(idPedido);
+        if (pedido.isPresent() && setor.isPresent()) {
+            pedido.get().setSetor(setor.get());
+            pedidosRepo.save(pedido.get());
+            return "Setor do pedido " + idPedido + " atualizado para o setor " + idSetor + " com sucesso";
+        }
+        return "Pedido não encontrado";
     }
 }
