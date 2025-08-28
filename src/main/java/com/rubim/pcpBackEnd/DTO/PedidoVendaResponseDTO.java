@@ -1,6 +1,9 @@
 package com.rubim.pcpBackEnd.DTO;
 import java.sql.Date;
+import java.time.LocalDate;
 import java.util.List;
+
+import com.rubim.pcpBackEnd.Entity.SetorEntity;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -12,13 +15,14 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PedidoVendaResponse {
+public class PedidoVendaResponseDTO {
     private Long id;
     private Long numero;
-    private Date dataEmissao;
-    private Date dataEntrega;
-    private Date dataPrevista;
+    private LocalDate dataEmissao;
+    private LocalDate dataEntrega;
+    private LocalDate dataPrevista;
     private Integer total;
+    private SetorEntity setor;
     private ClienteDTOResponse cliente;
-    private List<ItemPedidoResponse> itens;
+    private List<ItemPedidoResponseDTO> itens;
 }

@@ -1,5 +1,7 @@
 package com.rubim.pcpBackEnd.DTO;
 
+import com.rubim.pcpBackEnd.Entity.ProdutoEntity;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +11,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class ItemPedidoResponse {
+public class ItemPedidoResponseDTO {
 
     private Long id;
     private String codigo;
@@ -19,6 +21,14 @@ public class ItemPedidoResponse {
     private String descricao;
     private Integer quantidade;
     private String descricaoDetalhada;
-    private Produto produto;
-    private PedidoVendaResponse pedidoVenda;
+    private String corMadeira;
+    private String corRevestimento;
+    private String detalhesMedidas;
+    private ProdutoEntity produto;
+    private PedidoVendaResponseDTO pedidoVenda;
+
+
+    public void setProduto(ProdutoEntity produto) {
+        this.produto = produto;
+    }
 }
