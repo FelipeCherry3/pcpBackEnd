@@ -19,6 +19,7 @@ import com.rubim.pcpBackEnd.Entity.ProdutoEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -137,14 +138,17 @@ public class PedidoQueryService {
         return dto;
     }
 
-    public String atualizarSetorDePedido(Long idPedido, Long idSetor) {
-        Optional<SetorEntity> setor = setorRepo.findById(idSetor);
-        Optional<PedidosVendaEntity> pedido = pedidosRepo.findById(idPedido);
-        if (pedido.isPresent() && setor.isPresent()) {
-            pedido.get().setSetor(setor.get());
-            pedidosRepo.save(pedido.get());
-            return "Setor do pedido " + idPedido + " atualizado para o setor " + idSetor + " com sucesso";
-        }
-        return "Pedido não encontrado";
+    @Transactional
+    public boolean atualizarSetorDePedido(Long idPedido, Long idSetorNovo) {
+        PedidosVendaEntity pedido = pedidosRepo.findById(idPedido).orElse(null);
+        if (pedido == null) return false;
+
+        SetorEntity novoSetor = setorRepo.findById(idSetorNovo).orElse(null);
+        if (novoSetor == null) return false;
+
+        pedido.setSetor(novoSetor);
+        //@Transactional, o flush acontece no commit.
+        pedidosRepo.save(pedido);
+        return true;
     }
 }

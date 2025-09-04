@@ -5,12 +5,13 @@ import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
 import com.rubim.pcpBackEnd.Services.PedidoQueryService;
 
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import java.util.Map;
 
 
 @RestController
@@ -41,14 +42,22 @@ public class PedidoVendaQueryController {
     }
 
     @PutMapping("/atualizarSetor")
-    public String atualizarSetor(@RequestBody AtualizarSetorDTO dto) {
-        Long idPedido = dto.getIdPedido();
-        Long idSetor = dto.getIdNovoSetor();
-        if (idPedido == null || idSetor == null) {
-            return "IDs do pedido e do setor são obrigatórios";
+    public ResponseEntity<?> atualizarSetor(@RequestBody AtualizarSetorDTO dto) {
+        if (dto.getIdPedido() == null || dto.getIdNovoSetor() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "IDs do pedido e do setor são obrigatórios"));
         }
-        service.atualizarSetorDePedido(idPedido, idSetor);
-        return "Setor do pedido " + idPedido + " atualizado para o setor " + idSetor + " com sucesso";
+
+        boolean ok = service.atualizarSetorDePedido(dto.getIdPedido(), dto.getIdNovoSetor());
+        if (!ok) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Pedido ou Setor não encontrado"));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Setor atualizado",
+                "idPedido", dto.getIdPedido(),
+                "idNovoSetor", dto.getIdNovoSetor()
+        ));
     }
     
 }

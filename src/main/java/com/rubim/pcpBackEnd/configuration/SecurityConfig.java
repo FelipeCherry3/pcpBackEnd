@@ -34,6 +34,7 @@ public class SecurityConfig {
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 // você pode manter /login liberado de CSRF; GETs não precisam de CSRF
                 .ignoringRequestMatchers("/login")
+                .ignoringRequestMatchers("/login", "/api/pedidos-venda/**")
             )
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/csrf", "/login").permitAll()
