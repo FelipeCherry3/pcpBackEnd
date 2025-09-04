@@ -5,7 +5,7 @@ import java.math.BigDecimal;
 import org.hibernate.annotations.ManyToAny;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.rubim.pcpBackEnd.DTO.Produto;
+import com.rubim.pcpBackEnd.DTO.ProdutoDTO;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

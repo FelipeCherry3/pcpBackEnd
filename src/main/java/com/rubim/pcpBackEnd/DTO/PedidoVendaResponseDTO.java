@@ -22,7 +22,7 @@ public class PedidoVendaResponseDTO {
     private LocalDate dataEntrega;
     private LocalDate dataPrevista;
     private Integer total;
-    private SetorEntity setor;
+    private SetorDTO setor;
     private ClienteDTOResponse cliente;
     private List<ItemPedidoResponseDTO> itens;
 }

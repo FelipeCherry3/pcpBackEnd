@@ -24,11 +24,11 @@ public class ItemPedidoResponseDTO {
     private String corMadeira;
     private String corRevestimento;
     private String detalhesMedidas;
-    private ProdutoEntity produto;
+    private ProdutoDTO produto;
     private PedidoVendaResponseDTO pedidoVenda;
 
 
-    public void setProduto(ProdutoEntity produto) {
+    public void setProduto(ProdutoDTO produto) {
         this.produto = produto;
     }
 }

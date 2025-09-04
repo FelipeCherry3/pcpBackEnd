@@ -9,6 +9,8 @@ import com.rubim.pcpBackEnd.repository.SetorRepository;
 import com.rubim.pcpBackEnd.utils.JsonParserUtil;
 // DTOs:
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
+import com.rubim.pcpBackEnd.DTO.ProdutoDTO;
+import com.rubim.pcpBackEnd.DTO.SetorDTO;
 import com.rubim.pcpBackEnd.DTO.ItemPedidoResponseDTO;
 import com.rubim.pcpBackEnd.DTO.AtualizarSetorDTO;
 import com.rubim.pcpBackEnd.DTO.ClienteDTOResponse; 
@@ -69,13 +71,7 @@ public class PedidoQueryService {
         dto.setTotal(JsonParserUtil.toInt(p.getTotal()));
 
         // Setor 
-        SetorEntity setor = null;
-        try {
-            setor = (SetorEntity) PedidosVendaEntity.class
-                    .getMethod("getSetor")
-                    .invoke(p);
-        } catch (Exception ignore) {}
-        dto.setSetor(setor);
+        dto.setSetor(toSetorDTO(p.getSetor()));
 
         // Cliente/Contato → ClienteDTOResponse (preencha conforme seu DTO)
         dto.setCliente(toClienteDTO(p.getContato()));
@@ -105,26 +101,9 @@ public class PedidoQueryService {
         dto.setQuantidade(JsonParserUtil.toInt(it.getQuantidade()));
         dto.setDescricaoDetalhada(it.getDescricaoDetalhada());
 
-        // ====== GANCHO PARA REGEX ======
-        // Aqui você aplica seus regex em descricao / descricaoDetalhada
-        // para preencher corMadeira, corRevestimento, detalhesMedidas.
+        ProdutoDTO produtoDTO = toProdutoDTO(it.getProduto());
+        dto.setProduto(produtoDTO);
 
-        // ================================
-
-        // Produto: mapeie conforme seu tipo (Produto vs ProdutoEntity)
-        // Se seu DTO espera "Produto" (domínio), adapte aqui.
-        ProdutoEntity produto = null;
-        try {
-            // exemplo simples: se sua entidade do item tiver getProduto() e isso for atribuível a Produto
-            Object prodEntity = ProdutoDeVendaEntity.class.getMethod("getProduto").invoke(it);
-            if (prodEntity instanceof ProdutoEntity prod) {
-                produto = prod;
-            }
-        } catch (Exception ignore) {}
-        dto.setProduto(produto);
-
-        // Evitar ciclo infinito na serialização:
-        // Só setar pedido no item quando explicitamente solicitado.
         dto.setPedidoVenda(incluirPedidoNoItem ? pedidoPaiParaReferenciarOuNull : null);
 
         return dto;
@@ -135,6 +114,27 @@ public class PedidoQueryService {
         cli.setId(c.getId());
         cli.setNome(c.getNome());
         return cli;
+    }
+
+    private ProdutoDTO toProdutoDTO(ProdutoEntity p) {
+        if (p == null) return null;
+        ProdutoDTO dto = new ProdutoDTO();
+        dto.setId(p.getId());
+        dto.setNome(p.getNome());
+        dto.setCodigo(p.getCodigo());
+        dto.setDescricaoCurta(p.getDescricaoCurta());
+        dto.setPreco(p.getPreco());
+        dto.setPrecoCusto(p.getPrecoCusto());   
+        dto.setSituacao(p.getSituacao());
+        dto.setTipo(p.getTipo());
+        return dto;
+    }
+    private SetorDTO toSetorDTO(SetorEntity s) {
+        if (s == null) return null;
+        SetorDTO dto = new SetorDTO();
+        dto.setId(s.getId());
+        dto.setNome(s.getNome());
+        return dto;
     }
 
     public String atualizarSetorDePedido(Long idPedido, Long idSetor) {
