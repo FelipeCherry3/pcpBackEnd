@@ -1,5 +1,6 @@
 package com.rubim.pcpBackEnd.controllers;
 
+import com.rubim.pcpBackEnd.DTO.AtualizarSetorDTO;
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
 import com.rubim.pcpBackEnd.Services.PedidoQueryService;
 
@@ -40,7 +41,12 @@ public class PedidoVendaQueryController {
     }
 
     @PutMapping("/atualizarSetor")
-    public String atualizarSetor(@RequestBody Long idPedido, @RequestBody Long idSetor) {
+    public String atualizarSetor(@RequestBody AtualizarSetorDTO dto) {
+        Long idPedido = dto.getIdPedido();
+        Long idSetor = dto.getIdNovoSetor();
+        if (idPedido == null || idSetor == null) {
+            return "IDs do pedido e do setor são obrigatórios";
+        }
         service.atualizarSetorDePedido(idPedido, idSetor);
         return "Setor do pedido " + idPedido + " atualizado para o setor " + idSetor + " com sucesso";
     }

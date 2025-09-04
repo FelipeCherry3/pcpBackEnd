@@ -25,6 +25,7 @@ import com.rubim.pcpBackEnd.repository.ProdutoRepository;
 import com.rubim.pcpBackEnd.repository.SituacaoRepository;
 import com.rubim.pcpBackEnd.repository.VendedorRepository;
 import com.rubim.pcpBackEnd.utils.JsonParserUtil;
+import com.rubim.pcpBackEnd.utils.ParserDescricao;
 
 @Service
 public class BlingPedidoVendaService {
@@ -37,6 +38,7 @@ public class BlingPedidoVendaService {
     private SituacaoRepository situacaoRepository;
     private VendedorRepository vendedorRepository;
     private ProdutoRepository produtoRepository;
+    private ParserDescricao parserDescricao;
 
     @Autowired
     public BlingPedidoVendaService(BlingAuthService blingAuthService,
@@ -45,7 +47,8 @@ public class BlingPedidoVendaService {
                                    ContatoRepository contatoRepository,
                                    SituacaoRepository situacaoRepository,
                                    VendedorRepository vendedorRepository,
-                                   ProdutoRepository produtoRepository) {
+                                   ProdutoRepository produtoRepository,
+                                   ParserDescricao parserDescricao) {
         this.blingAuthService = blingAuthService;
         this.webClientBuilder = webClientBuilder;
         this.pedidosVendaRepository = pedidosVendaRepository;
@@ -53,6 +56,7 @@ public class BlingPedidoVendaService {
         this.situacaoRepository = situacaoRepository;
         this.vendedorRepository = vendedorRepository;
         this.produtoRepository = produtoRepository;
+        this.parserDescricao = parserDescricao;
     }
 
     private WebClient blingClient() {
@@ -116,7 +120,7 @@ public class BlingPedidoVendaService {
         if (data.get("total") != null) {
             pedido.setTotal(new BigDecimal(data.get("total").toString()));
         }
-        // Observações
+        // Observações do Pedido e Observações Internas
         pedido.setObservacoes((String) data.get("observacoes"));
         pedido.setObservacoesInternas((String) data.get("observacoesInternas"));
 
@@ -158,7 +162,7 @@ public class BlingPedidoVendaService {
             VendedorEntity vendedor = vendedorRepository.findById(vendedorId)
                     .orElseGet(VendedorEntity::new);
             vendedor.setId(vendedorId);
-            // Não temos nome no JSON; define um nome padrão se ainda não existir
+            // define um nome padrão se ainda não existir
             if (vendedor.getNome() == null) {
                 vendedor.setNome("Vendedor " + vendedorId);
             }
@@ -192,6 +196,13 @@ public class BlingPedidoVendaService {
                 // Descrições
                 item.setDescricao((String) itemMap.get("descricao"));
                 item.setDescricaoDetalhada((String) itemMap.get("descricaoDetalhada"));
+
+                // Aplica regex para preencher atributos adicionais
+                Map<String, String> atributos = parserDescricao.parseDescription(
+                    (String) item.getDescricaoDetalhada());
+                item.setCorMadeira(atributos.get("madeira"));
+                item.setCorRevestimento(atributos.get("revestimento"));
+                item.setMedidasTampo(atributos.get("tamanho"));
                 // Produto
                 @SuppressWarnings("unchecked")
                 Map<String, Object> prodMap = (Map<String, Object>) itemMap.get("produto");
@@ -215,7 +226,7 @@ public class BlingPedidoVendaService {
     }
 
     // A) Só busca os IDs por período (não salva)
-//////////////////////////////////////////////
+
 public List<Long> listarIdsPedidosPorPeriodo(LocalDate dataInicial, LocalDate dataFinal) {
     if (dataInicial == null || dataFinal == null) {
         throw new IllegalArgumentException("dataInicial e dataFinal são obrigatórios.");
@@ -246,7 +257,7 @@ public List<Long> listarIdsPedidosPorPeriodo(LocalDate dataInicial, LocalDate da
         if (o instanceof Map<?, ?> m) {
             Object idObj = m.get("id");
             if (idObj != null) {
-                ids.add(JsonParserUtil.toLong(idObj)); // usa seu helper toLong(Object)
+                ids.add(JsonParserUtil.toLong(idObj)); //Json Parser utils/JsonParserUtil
             }
         }
     }

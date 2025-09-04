@@ -7,18 +7,16 @@ import com.rubim.pcpBackEnd.Entity.ContatoEntity;
 import com.rubim.pcpBackEnd.repository.PedidosVendaRepository;
 import com.rubim.pcpBackEnd.repository.SetorRepository;
 import com.rubim.pcpBackEnd.utils.JsonParserUtil;
-// seus DTOs:
+// DTOs:
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
 import com.rubim.pcpBackEnd.DTO.ItemPedidoResponseDTO;
-import com.rubim.pcpBackEnd.DTO.ClienteDTOResponse; // se existir
-import com.rubim.pcpBackEnd.Entity.ProdutoEntity;         // ajuste se for ProdutoEntity
+import com.rubim.pcpBackEnd.DTO.AtualizarSetorDTO;
+import com.rubim.pcpBackEnd.DTO.ClienteDTOResponse; 
+import com.rubim.pcpBackEnd.Entity.ProdutoEntity;        
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,10 +68,9 @@ public class PedidoQueryService {
         dto.setDataPrevista(JsonParserUtil.toLocalDate(p.getDataPrevista()));
         dto.setTotal(JsonParserUtil.toInt(p.getTotal()));
 
-        // Setor (se existir na sua entidade)
+        // Setor 
         SetorEntity setor = null;
         try {
-            // se sua entidade PedidosVendaEntity tiver getSetor():
             setor = (SetorEntity) PedidosVendaEntity.class
                     .getMethod("getSetor")
                     .invoke(p);
@@ -111,7 +108,7 @@ public class PedidoQueryService {
         // ====== GANCHO PARA REGEX ======
         // Aqui você aplica seus regex em descricao / descricaoDetalhada
         // para preencher corMadeira, corRevestimento, detalhesMedidas.
-        aplicarRegexDeAtributos(dto);
+
         // ================================
 
         // Produto: mapeie conforme seu tipo (Produto vs ProdutoEntity)
@@ -132,46 +129,16 @@ public class PedidoQueryService {
 
         return dto;
     }
-
-    /** PREENCHA AQUI SUA LÓGICA DE REGEX — exemplo com TODOs */
-    private void aplicarRegexDeAtributos(ItemPedidoResponseDTO dto) {
-        String base = (dto.getDescricaoDetalhada() != null && !dto.getDescricaoDetalhada().isBlank())
-                ? dto.getDescricaoDetalhada()
-                : (dto.getDescricao() != null ? dto.getDescricao() : "");
-
-        // TODO: Exemplo de padrões — ajuste para o seu caso real.
-        // Pattern pMadeira = Pattern.compile("Madeira:\s*([\w\s]+)", Pattern.CASE_INSENSITIVE);
-        // Matcher m1 = pMadeira.matcher(base);
-        // if (m1.find()) dto.setCorMadeira(m1.group(1).trim());
-
-        // Pattern pRevest = Pattern.compile("Revestimento:\s*([\w\s]+)", Pattern.CASE_INSENSITIVE);
-        // Matcher m2 = pRevest.matcher(base);
-        // if (m2.find()) dto.setCorRevestimento(m2.group(1).trim());
-
-        // Pattern pMedidas = Pattern.compile("Medidas?:\s*([^;\n]+)", Pattern.CASE_INSENSITIVE);
-        // Matcher m3 = pMedidas.matcher(base);
-        // if (m3.find()) dto.setDetalhesMedidas(m3.group(1).trim());
-
-        // Por enquanto, zere para evitar lixo:
-        if (dto.getCorMadeira() == null) dto.setCorMadeira(null);
-        if (dto.getCorRevestimento() == null) dto.setCorRevestimento(null);
-        if (dto.getDetalhesMedidas() == null) dto.setDetalhesMedidas(null);
-    }
     private ClienteDTOResponse toClienteDTO(ContatoEntity c) {
         if (c == null) return null;
-        // TODO: preencha conforme os campos do seu ClienteDTOResponse.
-        // Exemplo genérico (se tiver setters):
-        // ClienteDTOResponse cli = new ClienteDTOResponse();
-        // cli.setId(c.getId());
-        // cli.setNome(c.getNome());
-        // cli.setDocumento(c.getNumeroDocumento());
-        // return cli;
-        return null; // por hora, retorne null até mapear seus campos reais
+        ClienteDTOResponse cli = new ClienteDTOResponse();
+        cli.setId(c.getId());
+        cli.setNome(c.getNome());
+        return cli;
     }
 
     public String atualizarSetorDePedido(Long idPedido, Long idSetor) {
         Optional<SetorEntity> setor = setorRepo.findById(idSetor);
-        // TODO: implementar lógica de atualização de setor
         Optional<PedidosVendaEntity> pedido = pedidosRepo.findById(idPedido);
         if (pedido.isPresent() && setor.isPresent()) {
             pedido.get().setSetor(setor.get());

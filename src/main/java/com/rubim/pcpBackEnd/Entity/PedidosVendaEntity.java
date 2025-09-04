@@ -69,7 +69,7 @@ public class PedidosVendaEntity {
     @ToString.Exclude
     private VendedorEntity vendedor;
 
-     @Column(columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
 	private String observacoes;
 	
     @Column(columnDefinition = "TEXT")

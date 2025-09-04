@@ -3,8 +3,12 @@ package com.rubim.pcpBackEnd.utils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
+
+import org.springframework.stereotype.Component;
+
 import java.util.regex.Matcher;
 
+@Component
 public class ParserDescricao {
     
     private static final Pattern DESCRIPTION_PATTERN = Pattern.compile(
