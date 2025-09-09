@@ -124,4 +124,13 @@ public class JsonParserUtil {
         if (s.equals("false") || s.equals("0")) return false;
         return null;
     }
+
+
+    public  static Object firstNonNull(Object... objs) {
+        if (objs == null) return null;
+        for (Object o : objs) {
+            if (o != null) return o;
+        }
+        return null;
+    }
 }

@@ -14,12 +14,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import com.rubim.pcpBackEnd.Entity.ContatoEntity;
+import com.rubim.pcpBackEnd.Entity.EstoqueEntity;
 import com.rubim.pcpBackEnd.Entity.PedidosVendaEntity;
 import com.rubim.pcpBackEnd.Entity.ProdutoDeVendaEntity;
 import com.rubim.pcpBackEnd.Entity.ProdutoEntity;
 import com.rubim.pcpBackEnd.Entity.SituacaoEntity;
 import com.rubim.pcpBackEnd.Entity.VendedorEntity;
 import com.rubim.pcpBackEnd.repository.ContatoRepository;
+import com.rubim.pcpBackEnd.repository.EstoqueRepository;
 import com.rubim.pcpBackEnd.repository.PedidosVendaRepository;
 import com.rubim.pcpBackEnd.repository.ProdutoRepository;
 import com.rubim.pcpBackEnd.repository.SituacaoRepository;
@@ -39,6 +41,7 @@ public class BlingPedidoVendaService {
     private VendedorRepository vendedorRepository;
     private ProdutoRepository produtoRepository;
     private ParserDescricao parserDescricao;
+    private EstoqueRepository estoqueRepository;
 
     @Autowired
     public BlingPedidoVendaService(BlingAuthService blingAuthService,
@@ -48,7 +51,8 @@ public class BlingPedidoVendaService {
                                    SituacaoRepository situacaoRepository,
                                    VendedorRepository vendedorRepository,
                                    ProdutoRepository produtoRepository,
-                                   ParserDescricao parserDescricao) {
+                                   ParserDescricao parserDescricao,
+                                   EstoqueRepository estoqueRepository) {
         this.blingAuthService = blingAuthService;
         this.webClientBuilder = webClientBuilder;
         this.pedidosVendaRepository = pedidosVendaRepository;
@@ -57,6 +61,7 @@ public class BlingPedidoVendaService {
         this.vendedorRepository = vendedorRepository;
         this.produtoRepository = produtoRepository;
         this.parserDescricao = parserDescricao;
+        this.estoqueRepository = estoqueRepository;
     }
 
     private WebClient blingClient() {
@@ -69,6 +74,7 @@ public class BlingPedidoVendaService {
      * Busca um pedido pelo identificador na API do Bling e persiste seus dados.
      * @param idPedido identificador numérico do pedido no Bling
      */
+    
     @Transactional
     public void sincronizarPedido(Long idPedido) {
         // Obtém um token de acesso válido
@@ -228,6 +234,8 @@ public class BlingPedidoVendaService {
     // A) Só busca os IDs por período (não salva)
 
 public List<Long> listarIdsPedidosPorPeriodo(LocalDate dataInicial, LocalDate dataFinal) {
+
+    //Valida Parametros
     if (dataInicial == null || dataFinal == null) {
         throw new IllegalArgumentException("dataInicial e dataFinal são obrigatórios.");
     }
@@ -235,8 +243,10 @@ public List<Long> listarIdsPedidosPorPeriodo(LocalDate dataInicial, LocalDate da
         throw new IllegalArgumentException("dataFinal não pode ser anterior a dataInicial.");
     }
 
+    // Obtém token de acesso válido
     String token = blingAuthService.obterAccessTokenValido().block();
 
+    // Chama a API do Bling
     Map<?, ?> resp = blingClient().get()
             .uri(uri -> uri.path("/pedidos/vendas")
                     .queryParam("dataInicial", dataInicial.toString())
@@ -275,5 +285,105 @@ public List<Long> listarIdsPedidosPorPeriodo(LocalDate dataInicial, LocalDate da
         }
         return ids.size();
     }
-    
+
+    /**
+ * Sincroniza produtos do Bling do tipo "E" (Composições) e grava:
+ * - Produto: id, nome, codigo, tipo, preco, precoCusto, situacao, descricaoCurta
+ * - Estoque DEFAULT: quantidade = saldoVirtualTotal (ou saldoValorVirtual) do JSON
+ *
+ * @return quantidade de itens processados/persistidos
+ */
+@Transactional
+public int sincronizarProdutos() {
+    String token = blingAuthService.obterAccessTokenValido().block();
+    if (token == null) {
+        throw new IllegalStateException("Não foi possível obter token de acesso");
+    }
+
+    final int limite = 100;
+    int pagina = 1;
+    int totalPersistidos = 0;
+
+    while (true) {
+        // cópia efetivamente final para usar na lambda
+        final int pageForCall = pagina;
+
+        Map<?, ?> resp = blingClient().get()
+                .uri(uri -> uri.path("/produtos")
+                        .queryParam("pagina", pageForCall)
+                        .queryParam("limite", limite)
+                        .queryParam("tipo", "E") // apenas Composições
+                        .build())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
+
+        if (resp == null) break;
+
+        Object dataObj = resp.get("data");
+        if (!(dataObj instanceof List<?> lista) || lista.isEmpty()) {
+            break; // acabou a paginação
+        }
+
+        for (Object o : lista) {
+            if (!(o instanceof Map<?, ?> m)) continue;
+
+            // --- Produto ---
+            Long id = JsonParserUtil.toLong(m.get("id"));
+            if (id == null) continue;
+
+            ProdutoEntity p = produtoRepository.findById(id).orElseGet(ProdutoEntity::new);
+            p.setId(id);
+            p.setNome((String) m.get("nome"));
+            p.setCodigo((String) m.get("codigo"));
+            p.setTipo((String) m.get("tipo"));
+            p.setPreco(JsonParserUtil.toBigDecimal(m.get("preco")));
+            p.setPrecoCusto(JsonParserUtil.toBigDecimal(JsonParserUtil.firstNonNull(
+                    m.get("precoCusto"),
+                    m.get("preco_custo")
+            )));
+            p.setSituacao((String) m.get("situacao"));
+            p.setDescricaoCurta((String) m.get("descricaoCurta"));
+            if (p.getDescricaoCurta() == null && m.get("descricao_curta") != null) {
+                p.setDescricaoCurta(String.valueOf(m.get("descricao_curta")));
+            }
+            produtoRepository.save(p);
+
+            // --- Estoque DEFAULT ---
+            @SuppressWarnings("unchecked")
+            Map<String, Object> estoqueMap = (Map<String, Object>) m.get("estoque");
+
+            int quantidade = 0;
+            if (estoqueMap != null) {
+                quantidade = JsonParserUtil.toInt(JsonParserUtil.toBigDecimal(JsonParserUtil.firstNonNull(
+                        estoqueMap.get("saldoVirtualTotal"),
+                        estoqueMap.get("saldo_virtual_total"),
+                        estoqueMap.get("saldoValorVirtual"),
+                        estoqueMap.get("saldo_valor_virtual")
+                )));
+            }
+
+            EstoqueEntity e = estoqueRepository.findByProdutoAndDeposito(p, "DEFAULT")
+                    .orElseGet(() -> {
+                        EstoqueEntity novo = new EstoqueEntity();
+                        novo.setProduto(p);
+                        novo.setDeposito("DEFAULT");
+                        novo.setMinimo(-1000);
+                        return novo;
+                    });
+            e.setSaldoVirtualTotal(quantidade); // <<< usa a coluna 'saldoVirtualTotal' da sua tabela
+            estoqueRepository.save(e);
+
+            totalPersistidos++;
+        }
+
+        // próxima página
+        pagina++;
+    }
+
+    return totalPersistidos;
+}
+
+        
 }

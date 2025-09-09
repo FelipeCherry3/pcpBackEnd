@@ -13,6 +13,5 @@ public class SetorEntity {
     @Id
     private Long id;
     private String nome;
-    private String descricao;
     
 }
