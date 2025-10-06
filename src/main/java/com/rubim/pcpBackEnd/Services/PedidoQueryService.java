@@ -106,6 +106,9 @@ public class PedidoQueryService {
         dto.setDescricao(it.getDescricao());
         dto.setQuantidade(JsonParserUtil.toInt(it.getQuantidade()));
         dto.setDescricaoDetalhada(it.getDescricaoDetalhada());
+        dto.setCorMadeira(it.getCorMadeira());
+        dto.setCorRevestimento(it.getCorRevestimento());
+        dto.setDetalhesMedidas(it.getMedidasTampo());
 
         ProdutoDTO produtoDTO = toProdutoDTO(it.getProduto());
         dto.setProduto(produtoDTO);
@@ -171,21 +174,21 @@ public class PedidoQueryService {
         applyIfNotNull(dto.getPriority(), pedido::setPriority);
 
         // Itens: NÂO substituir coleção; apenas sobrescrever os existentes por id
-        if (dto.getItens() != null && pedido.getItens() != null && !pedido.getItens().isEmpty()) {
+        if (dto.getItens() != null && pedido.getItens() != null) {
             Map<Long, ProdutoDeVendaEntity> existentes = pedido.getItens().stream()
                 .filter(it -> it.getId() != null)
                 .collect(java.util.stream.Collectors.toMap(ProdutoDeVendaEntity::getId, it -> it));
 
             for (ItemPedidoResponseDTO itemDTO : dto.getItens()) {
-                if (itemDTO.getId() == null) continue; // não cria
-                ProdutoDeVendaEntity alvo = existentes.get(itemDTO.getId());
+                Long idItem = itemDTO.getId();
+                if (idItem == null) continue;              // não cria
+                ProdutoDeVendaEntity alvo = existentes.get(idItem);
                 if (alvo != null) {
-                    patchItemFromDTO(alvo, itemDTO); // só sobrescreve campos enviados
+                    patchItemFromDTO(alvo, itemDTO);
                 }
+                // Se não encontrar no map, ignora silenciosamente (não cria/não remove)
             }
-            // Importante: não fazer pedido.setItens(...)
         }
-
         pedidosRepo.save(pedido);
         return true;
     }
