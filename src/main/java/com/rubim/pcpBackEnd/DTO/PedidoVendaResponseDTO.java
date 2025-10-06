@@ -25,4 +25,5 @@ public class PedidoVendaResponseDTO {
     private SetorDTO setor;
     private ClienteDTOResponse cliente;
     private List<ItemPedidoResponseDTO> itens;
+    private String priority;
 }

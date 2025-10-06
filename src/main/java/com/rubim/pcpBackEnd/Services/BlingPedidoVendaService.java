@@ -226,6 +226,7 @@ public class BlingPedidoVendaService {
         }
         // Substitui a lista de itens no pedido (orphanRemoval cuidará da exclusão de antigos)
         pedido.setItens(itensList);
+        pedido.setPriority("normal");
 
         // Persiste o pedido e seus itens (cascateado)
         pedidosVendaRepository.save(pedido);

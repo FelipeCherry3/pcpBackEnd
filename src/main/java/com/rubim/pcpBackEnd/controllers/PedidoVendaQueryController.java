@@ -41,6 +41,24 @@ public class PedidoVendaQueryController {
         return service.detalhar(id);
     }
 
+    @PutMapping("/atualizarDados")
+    public ResponseEntity<?> atualizarDados(@RequestBody PedidoVendaResponseDTO dto) {
+        if (dto.getId() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "ID do pedido é obrigatório"));
+        }
+
+        boolean ok = service.atualizarDadosPedido(dto);
+        if (!ok) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", "Pedido não encontrado"));
+        }
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Dados atualizados",
+                "idPedido", dto.getId()
+        ));
+    }
+
     @PutMapping("/atualizarSetor")
     public ResponseEntity<?> atualizarSetor(@RequestBody AtualizarSetorDTO dto) {
         if (dto.getIdPedido() == null || dto.getIdNovoSetor() == null) {

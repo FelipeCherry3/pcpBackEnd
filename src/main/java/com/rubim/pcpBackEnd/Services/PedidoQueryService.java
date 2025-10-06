@@ -5,6 +5,7 @@ import com.rubim.pcpBackEnd.Entity.ProdutoDeVendaEntity;
 import com.rubim.pcpBackEnd.Entity.SetorEntity;
 import com.rubim.pcpBackEnd.Entity.ContatoEntity;
 import com.rubim.pcpBackEnd.repository.PedidosVendaRepository;
+import com.rubim.pcpBackEnd.repository.ProdutoRepository;
 import com.rubim.pcpBackEnd.repository.SetorRepository;
 import com.rubim.pcpBackEnd.utils.JsonParserUtil;
 // DTOs:
@@ -14,8 +15,7 @@ import com.rubim.pcpBackEnd.DTO.SetorDTO;
 import com.rubim.pcpBackEnd.DTO.ItemPedidoResponseDTO;
 import com.rubim.pcpBackEnd.DTO.AtualizarSetorDTO;
 import com.rubim.pcpBackEnd.DTO.ClienteDTOResponse; 
-import com.rubim.pcpBackEnd.Entity.ProdutoEntity;        
-
+import com.rubim.pcpBackEnd.Entity.ProdutoEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +23,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -31,9 +32,12 @@ public class PedidoQueryService {
     private final PedidosVendaRepository pedidosRepo;
     private final SetorRepository setorRepo;
 
-    public PedidoQueryService(PedidosVendaRepository pedidosRepo, SetorRepository setorRepo) {
+    private final ProdutoRepository produtoRepo;
+
+    public PedidoQueryService(PedidosVendaRepository pedidosRepo, SetorRepository setorRepo, ProdutoRepository produtoRepo) {
         this.pedidosRepo = pedidosRepo;
         this.setorRepo = setorRepo;
+        this.produtoRepo = produtoRepo;
     }
 
     /**
@@ -70,6 +74,7 @@ public class PedidoQueryService {
         dto.setDataEntrega(JsonParserUtil.toLocalDate(p.getDataSaida()));
         dto.setDataPrevista(JsonParserUtil.toLocalDate(p.getDataPrevista()));
         dto.setTotal(JsonParserUtil.toInt(p.getTotal()));
+        dto.setPriority(p.getPriority());
 
         // Setor 
         dto.setSetor(toSetorDTO(p.getSetor()));
@@ -150,5 +155,62 @@ public class PedidoQueryService {
         //@Transactional, o flush acontece no commit.
         pedidosRepo.save(pedido);
         return true;
+    }
+
+    @Transactional
+    public boolean atualizarDadosPedido(PedidoVendaResponseDTO dto) {
+        if (dto == null || dto.getId() == null) return false;
+
+        PedidosVendaEntity pedido = pedidosRepo.findById(dto.getId()).orElse(null);
+        if (pedido == null) return false;
+
+        // Patch de campos simples (só aplica se vier não-nulo)
+        applyIfNotNull(dto.getDataEmissao(), pedido::setData);
+        applyIfNotNull(dto.getDataEntrega(), pedido::setDataSaida);
+        applyIfNotNull(dto.getDataPrevista(), pedido::setDataPrevista);
+        applyIfNotNull(dto.getPriority(), pedido::setPriority);
+
+        // Itens: NÂO substituir coleção; apenas sobrescrever os existentes por id
+        if (dto.getItens() != null && pedido.getItens() != null && !pedido.getItens().isEmpty()) {
+            Map<Long, ProdutoDeVendaEntity> existentes = pedido.getItens().stream()
+                .filter(it -> it.getId() != null)
+                .collect(java.util.stream.Collectors.toMap(ProdutoDeVendaEntity::getId, it -> it));
+
+            for (ItemPedidoResponseDTO itemDTO : dto.getItens()) {
+                if (itemDTO.getId() == null) continue; // não cria
+                ProdutoDeVendaEntity alvo = existentes.get(itemDTO.getId());
+                if (alvo != null) {
+                    patchItemFromDTO(alvo, itemDTO); // só sobrescreve campos enviados
+                }
+            }
+            // Importante: não fazer pedido.setItens(...)
+        }
+
+        pedidosRepo.save(pedido);
+        return true;
+    }
+
+    private static <T> void applyIfNotNull(T value, java.util.function.Consumer<T> setter) {
+        if (value != null) setter.accept(value);
+    }
+
+    private void patchItemFromDTO(ProdutoDeVendaEntity entity, ItemPedidoResponseDTO dto) {
+        applyIfNotNull(dto.getCodigo(), entity::setCodigo);
+        applyIfNotNull(dto.getUnidade(), entity::setUnidade);
+        applyIfNotNull(dto.getDescricao(), entity::setDescricao);
+        applyIfNotNull(dto.getDescricaoDetalhada(), entity::setDescricaoDetalhada);
+        applyIfNotNull(dto.getCorMadeira(), entity::setCorMadeira);
+        applyIfNotNull(dto.getCorRevestimento(), entity::setCorRevestimento);
+        applyIfNotNull(dto.getDetalhesMedidas(), entity::setMedidasTampo);
+
+        // numéricos via seu util
+        applyIfNotNull(JsonParserUtil.toBigDecimal(dto.getQuantidade()), entity::setQuantidade);
+        applyIfNotNull(JsonParserUtil.toBigDecimal(dto.getDesconto()), entity::setDesconto);
+        applyIfNotNull(JsonParserUtil.toBigDecimal(dto.getValor()), entity::setValor);
+
+        // Produto relacionado: só troca se vier id (não cria nada)
+        if (dto.getProduto() != null && dto.getProduto().getId() != null) {
+            produtoRepo.findById(dto.getProduto().getId()).ifPresent(entity::setProduto);
+        }
     }
 }

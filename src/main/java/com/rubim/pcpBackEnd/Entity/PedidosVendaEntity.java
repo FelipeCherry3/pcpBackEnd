@@ -47,6 +47,9 @@ public class PedidosVendaEntity {
 	private LocalDate data;
 	private LocalDate dataSaida;
 	private LocalDate dataPrevista;
+
+    @Column(name = "priority", length = 50)
+    private String priority;
     
     @Column(precision = 18, scale = 2)
 	private BigDecimal totalProdutos;
