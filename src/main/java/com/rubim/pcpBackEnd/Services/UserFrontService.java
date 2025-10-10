@@ -3,10 +3,12 @@ package com.rubim.pcpBackEnd.Services;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.rubim.pcpBackEnd.Entity.UserFrontEntity;
 import com.rubim.pcpBackEnd.repository.UserFrontRepository;
 
+@Service
 public class UserFrontService {
 
     @Autowired
