@@ -77,7 +77,11 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
         // se usar proxy do Vite, pode deixar * (pois a chamada chega como mesma origem)
+<<<<<<< HEAD
         cfg.setAllowedOrigins(List.of("http://localhost:5173", "https://pcp-rubim-borb79kuz-felipe-elias-projects.vercel.app/", "https://177.21.66.161"));
+=======
+        cfg.setAllowedOrigins(List.of("http://localhost:5173", "https://produ-o-rubim-production.up.railway.app/"));
+>>>>>>> 11c306f6ea8e6a4c4cf893601b94e59ade4aae04
         cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(true);
