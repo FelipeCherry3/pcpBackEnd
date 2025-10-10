@@ -3,7 +3,9 @@ package com.rubim.pcpBackEnd.controllers;
 import com.rubim.pcpBackEnd.DTO.AtualizarSetorDTO;
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
 import com.rubim.pcpBackEnd.Services.PedidoQueryService;
+import com.rubim.pcpBackEnd.Services.UserFrontService;
 
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,18 +22,27 @@ public class PedidoVendaQueryController {
 
     private final PedidoQueryService service;
 
-    public PedidoVendaQueryController(PedidoQueryService service) {
+    private final UserFrontService userService;
+
+    public PedidoVendaQueryController(PedidoQueryService service, UserFrontService userService) {
         this.service = service;
+        this.userService = userService;
     }
 
     // GET por período: /api/pedidos-venda?dataInicial=2025-08-21&dataFinal=2025-08-28
     @GetMapping
     public List<PedidoVendaResponseDTO> listarPorPeriodo(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicial,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinal) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFinal,
+            @RequestParam String password) {
         if (dataFinal.isBefore(dataInicial)) {
             throw new IllegalArgumentException("dataFinal não pode ser anterior a dataInicial");
         }
+
+        if (!userService.validateCarregarDados(password)) {
+            throw new IllegalArgumentException("Senha inválida");
+        }
+
         return service.listarPorPeriodo(dataInicial, dataFinal);
     }
 
@@ -61,10 +72,15 @@ public class PedidoVendaQueryController {
 
     @PutMapping("/atualizarSetor")
     public ResponseEntity<?> atualizarSetor(@RequestBody AtualizarSetorDTO dto) {
-        if (dto.getIdPedido() == null || dto.getIdNovoSetor() == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "IDs do pedido e do setor são obrigatórios"));
+
+        if (dto.getIdPedido() == null || dto.getIdNovoSetor() == null || dto.getPassword() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "IDs do pedido e do setor e senha são obrigatórios"));
         }
 
+        if (!userService.validateMudancaSetor(dto.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Senha inválida"));
+        }
+        
         boolean ok = service.atualizarSetorDePedido(dto.getIdPedido(), dto.getIdNovoSetor());
         if (!ok) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
