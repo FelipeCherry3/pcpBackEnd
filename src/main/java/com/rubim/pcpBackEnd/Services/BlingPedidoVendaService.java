@@ -234,44 +234,45 @@ public class BlingPedidoVendaService {
 
     // A) Só busca os IDs por período (não salva)
 
-public List<Long> listarIdsPedidosPorPeriodo(LocalDate dataInicial, LocalDate dataFinal) {
+    public List<Long> listarIdsPedidosPorPeriodo(LocalDate dataInicial, LocalDate dataFinal) {
 
-    //Valida Parametros
-    if (dataInicial == null || dataFinal == null) {
-        throw new IllegalArgumentException("dataInicial e dataFinal são obrigatórios.");
-    }
-    if (dataFinal.isBefore(dataInicial)) {
-        throw new IllegalArgumentException("dataFinal não pode ser anterior a dataInicial.");
-    }
+        //Valida Parametros
+        if (dataInicial == null || dataFinal == null) {
+            throw new IllegalArgumentException("dataInicial e dataFinal são obrigatórios.");
+        }
+        if (dataFinal.isBefore(dataInicial)) {
+            throw new IllegalArgumentException("dataFinal não pode ser anterior a dataInicial.");
+        }
 
-    // Obtém token de acesso válido
-    String token = blingAuthService.obterAccessTokenValido().block();
+        // Obtém token de acesso válido
+        String token = blingAuthService.obterAccessTokenValido().block();
 
-    // Chama a API do Bling
-    Map<?, ?> resp = blingClient().get()
-            .uri(uri -> uri.path("/pedidos/vendas")
-                    .queryParam("dataInicial", dataInicial.toString())
-                    .queryParam("dataFinal",   dataFinal.toString())
-                    .build())
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
-            .retrieve()
-            .bodyToMono(Map.class)
-            .block();
+        // Chama a API do Bling
+        Map<?, ?> resp = blingClient().get()
+                .uri(uri -> uri.path("/pedidos/vendas")
+                        .queryParam("dataInicial", dataInicial.toString())
+                        .queryParam("dataFinal",   dataFinal.toString())
+                        .queryParam("idsSituacoes[]", 9)
+                        .build())
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .retrieve()
+                .bodyToMono(Map.class)
+                .block();
 
-    if (resp == null) return Collections.emptyList();
+        if (resp == null) return Collections.emptyList();
 
-    Object dataObj = resp.get("data");
-    if (!(dataObj instanceof List<?> lista)) return Collections.emptyList();
+        Object dataObj = resp.get("data");
+        if (!(dataObj instanceof List<?> lista)) return Collections.emptyList();
 
-    List<Long> ids = new ArrayList<>(lista.size());
-    for (Object o : lista) {
-        if (o instanceof Map<?, ?> m) {
-            Object idObj = m.get("id");
-            if (idObj != null) {
-                ids.add(JsonParserUtil.toLong(idObj)); //Json Parser utils/JsonParserUtil
+        List<Long> ids = new ArrayList<>(lista.size());
+        for (Object o : lista) {
+            if (o instanceof Map<?, ?> m) {
+                Object idObj = m.get("id");
+                if (idObj != null) {
+                    ids.add(JsonParserUtil.toLong(idObj)); //Json Parser utils/JsonParserUtil
+                }
             }
         }
-    }
     return ids;
     }
 
