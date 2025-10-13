@@ -252,7 +252,7 @@ public class BlingPedidoVendaService {
                 .uri(uri -> uri.path("/pedidos/vendas")
                         .queryParam("dataInicial", dataInicial.toString())
                         .queryParam("dataFinal",   dataFinal.toString())
-                        .queryParam("idsSituacoes[]", 9)
+                        .queryParam("idsSituacoes[]", 6)
                         .build())
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .retrieve()
