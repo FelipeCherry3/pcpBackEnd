@@ -73,12 +73,8 @@ public class PedidoVendaQueryController {
     @PutMapping("/atualizarSetor")
     public ResponseEntity<?> atualizarSetor(@RequestBody AtualizarSetorDTO dto) {
 
-        if (dto.getIdPedido() == null || dto.getIdNovoSetor() == null || dto.getPassword() == null) {
-            return ResponseEntity.badRequest().body(Map.of("message", "IDs do pedido e do setor e senha são obrigatórios"));
-        }
-
-        if (!userService.validateMudancaSetor(dto.getPassword())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("message", "Senha inválida"));
+        if (dto.getIdPedido() == null || dto.getIdNovoSetor() == null) {
+            return ResponseEntity.badRequest().body(Map.of("message", "IDs do pedido e do setor são obrigatórios"));
         }
         
         boolean ok = service.atualizarSetorDePedido(dto.getIdPedido(), dto.getIdNovoSetor());

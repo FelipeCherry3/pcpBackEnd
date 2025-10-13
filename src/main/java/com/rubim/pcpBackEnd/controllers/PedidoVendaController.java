@@ -28,15 +28,11 @@ public class PedidoVendaController {
 
     @GetMapping("/getVendas")
     public Mono<String> getPedidosVenda(@RequestParam String dataInicial,
-                                        @RequestParam String dataFinal,
-                                        @RequestParam String password) {
-        if (!userService.validateSincronizarBling(password)) {
-            throw new IllegalArgumentException("Senha inválida");
-        } else {
+                                        @RequestParam String dataFinal) {
         LocalDate di = com.rubim.pcpBackEnd.utils.JsonParserUtil.toLocalDate(dataInicial);
         LocalDate df = com.rubim.pcpBackEnd.utils.JsonParserUtil.toLocalDate(dataFinal);
         int response = blingPedidoVendaService.sincronizarPedidosDoPeriodo(di, df);
         return Mono.just("Número de pedidos sincronizados: " + response);
-        }
+        
     }
 }
