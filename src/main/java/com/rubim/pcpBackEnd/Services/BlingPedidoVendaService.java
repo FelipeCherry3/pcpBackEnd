@@ -273,6 +273,9 @@ public class BlingPedidoVendaService {
                 }
             }
         }
+        // Remove IDs que já existem no banco de dados
+        List<Long> existingIds = pedidosVendaRepository.findExistingIds(ids);
+        ids.removeAll(existingIds);
     return ids;
     }
 

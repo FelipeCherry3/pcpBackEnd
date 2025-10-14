@@ -11,4 +11,7 @@ import com.rubim.pcpBackEnd.Entity.ProdutoEntity;
 public interface PedidosVendaRepository extends JpaRepository<PedidosVendaEntity, Long> {
     // Custom query methods (if needed) can be defined here
     List<PedidosVendaEntity> findAllByDataBetween(LocalDate dataInicial, LocalDate dataFinal);
+    
+    @Query("select p.id from PedidosVendaEntity p where p.id in :ids")
+    List<Long> findExistingIds(@Param("ids") Collection<Long> ids);
 }
