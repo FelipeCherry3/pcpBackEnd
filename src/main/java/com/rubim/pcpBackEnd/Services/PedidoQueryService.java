@@ -206,7 +206,7 @@ public class PedidoQueryService {
         applyIfNotNull(dto.getCorRevestimento(), entity::setCorRevestimento);
         applyIfNotNull(dto.getDetalhesMedidas(), entity::setMedidasTampo);
 
-        // numéricos via seu util
+        // numéricos via util
         applyIfNotNull(JsonParserUtil.toBigDecimal(dto.getQuantidade()), entity::setQuantidade);
         applyIfNotNull(JsonParserUtil.toBigDecimal(dto.getDesconto()), entity::setDesconto);
         applyIfNotNull(JsonParserUtil.toBigDecimal(dto.getValor()), entity::setValor);

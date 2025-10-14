@@ -50,7 +50,7 @@ public class PedidosVendaEntity {
 
     @Column(name = "priority", length = 50)
     private String priority;
-    
+
     @Column(precision = 18, scale = 2)
 	private BigDecimal totalProdutos;
 
