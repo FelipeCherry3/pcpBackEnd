@@ -177,13 +177,13 @@ public class PedidoQueryService {
 
     // VERIFICA ORDEM DOS SETORES PARA DECIDIR TIPO DE MOVIMENTAÇÃO
     private MovimentoTipo decideTipoMovimentacao(SetorEntity antigo, Long atualId) {
-        if (antigo == null) return MovimentoTipo.AVANCO_PRODUCAO; // primeiro apontamento
+        if (antigo == null) return MovimentoTipo.AVANÇO_PRODUÇÃO; // primeiro apontamento
         Integer ordemAntigo = OrdemSetor.ORDEM_SETOR.getOrDefault(antigo.getId(), 0);
         Integer ordemAtual  = OrdemSetor.ORDEM_SETOR.getOrDefault(atualId, 0);
         if (ordemAtual >= ordemAntigo) {
-            return MovimentoTipo.AVANCO_PRODUCAO;
+            return MovimentoTipo.AVANÇO_PRODUÇÃO;
         }
-        return MovimentoTipo.RECUO_PRODUCAO;
+        return MovimentoTipo.RECUO_PRODUÇÃO;    
     }
 
     @Transactional
