@@ -44,9 +44,8 @@ public class MovimentacaoSetorEntity {
             foreignKey = @ForeignKey(name = "fk_mov_setor_atual"))
     private SetorEntity setorAtual;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "descricao", nullable = false)
-    private MovimentoTipo descricao; // RECUO_PRODUCAO ou AVANCO_PRODUCAO
+    private String descricao; // RECUO_PRODUCAO ou AVANCO_PRODUCAO
 
     @CreationTimestamp
     @Column(name = "criado_em", nullable = false)

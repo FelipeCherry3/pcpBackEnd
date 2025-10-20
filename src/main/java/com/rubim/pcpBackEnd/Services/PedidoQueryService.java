@@ -165,6 +165,7 @@ public class PedidoQueryService {
         movimentacao.setUser(null);
         movimentacao.setSetorAntigo(pedido.getSetor());
         movimentacao.setSetorAtual(novoSetor);
+
         movimentacao.setDescricao(decideTipoMovimentacao(pedido.getSetor(), novoSetor.getId()));
 
         movimentacaoRepo.save(movimentacao);
@@ -176,14 +177,14 @@ public class PedidoQueryService {
     }
 
     // VERIFICA ORDEM DOS SETORES PARA DECIDIR TIPO DE MOVIMENTAÇÃO
-    private MovimentoTipo decideTipoMovimentacao(SetorEntity antigo, Long atualId) {
-        if (antigo == null) return MovimentoTipo.AVANÇO_PRODUÇÃO; // primeiro apontamento
+    private String decideTipoMovimentacao(SetorEntity antigo, Long atualId) {
+        if (antigo == null) return "AVANÇO PRODUÇÃO"; // primeiro apontamento
         Integer ordemAntigo = OrdemSetor.ORDEM_SETOR.getOrDefault(antigo.getId(), 0);
         Integer ordemAtual  = OrdemSetor.ORDEM_SETOR.getOrDefault(atualId, 0);
         if (ordemAtual >= ordemAntigo) {
-            return MovimentoTipo.AVANÇO_PRODUÇÃO;
+            return "RECUO PRODUÇÃO";
         }
-        return MovimentoTipo.RECUO_PRODUÇÃO;    
+        return "AVANÇO PRODUÇÃO";
     }
 
     @Transactional
