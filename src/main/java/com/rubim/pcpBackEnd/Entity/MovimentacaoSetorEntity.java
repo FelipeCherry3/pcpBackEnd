@@ -29,7 +29,7 @@ public class MovimentacaoSetorEntity {
             foreignKey = @ForeignKey(name = "fk_mov_pedido"))
     private PedidosVendaEntity pedido;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_user",
             foreignKey = @ForeignKey(name = "fk_mov_user"))
     private UserFrontEntity user;
