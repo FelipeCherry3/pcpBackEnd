@@ -4,10 +4,14 @@ import com.rubim.pcpBackEnd.Entity.PedidosVendaEntity;
 import com.rubim.pcpBackEnd.Entity.ProdutoDeVendaEntity;
 import com.rubim.pcpBackEnd.Entity.SetorEntity;
 import com.rubim.pcpBackEnd.Entity.ContatoEntity;
+import com.rubim.pcpBackEnd.Entity.MovimentacaoSetorEntity;
+import com.rubim.pcpBackEnd.Entity.MovimentoTipo;
 import com.rubim.pcpBackEnd.repository.PedidosVendaRepository;
 import com.rubim.pcpBackEnd.repository.ProdutoRepository;
 import com.rubim.pcpBackEnd.repository.SetorRepository;
 import com.rubim.pcpBackEnd.utils.JsonParserUtil;
+import com.rubim.pcpBackEnd.utils.OrdemSetor;
+import com.rubim.pcpBackEnd.repository.MovimentacaoSetorRepository;
 // DTOs:
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
 import com.rubim.pcpBackEnd.DTO.ProdutoDTO;
@@ -32,11 +36,13 @@ public class PedidoQueryService {
     private final PedidosVendaRepository pedidosRepo;
     private final SetorRepository setorRepo;
 
+    private final MovimentacaoSetorRepository movimentacaoRepo;
     private final ProdutoRepository produtoRepo;
 
-    public PedidoQueryService(PedidosVendaRepository pedidosRepo, SetorRepository setorRepo, ProdutoRepository produtoRepo) {
+    public PedidoQueryService(PedidosVendaRepository pedidosRepo, SetorRepository setorRepo, MovimentacaoSetorRepository movimentacaoRepo, ProdutoRepository produtoRepo) {
         this.pedidosRepo = pedidosRepo;
         this.setorRepo = setorRepo;
+        this.movimentacaoRepo = movimentacaoRepo;
         this.produtoRepo = produtoRepo;
     }
 
@@ -154,10 +160,29 @@ public class PedidoQueryService {
         SetorEntity novoSetor = setorRepo.findById(idSetorNovo).orElse(null);
         if (novoSetor == null) return false;
 
+        MovimentacaoSetorEntity movimentacao = new MovimentacaoSetorEntity();
+        movimentacao.setPedido(pedido);
+        movimentacao.setSetorAntigo(pedido.getSetor());
+        movimentacao.setSetorNovo(novoSetor);
+        movimentacao.setDescricao(decideTipoMovimentacao(pedido.getSetor(), novoSetor.getId()));
+
+        movimentacaoRepo.save(movimentacao);
+        
         pedido.setSetor(novoSetor);
         //@Transactional, o flush acontece no commit.
         pedidosRepo.save(pedido);
         return true;
+    }
+
+    // VERIFICA ORDEM DOS SETORES PARA DECIDIR TIPO DE MOVIMENTAÇÃO
+    private MovimentoTipo decideTipoMovimentacao(SetorEntity antigo, Long atualId) {
+        if (antigo == null) return MovimentoTipo.AVANCO_PRODUCAO; // primeiro apontamento
+        Integer ordemAntigo = OrdemSetor.ORDEM_SETOR.getOrDefault(antigo.getId(), 0);
+        Integer ordemAtual  = OrdemSetor.ORDEM_SETOR.getOrDefault(atualId, 0);
+        if (ordemAtual >= ordemAntigo) {
+            return MovimentoTipo.AVANCO_PRODUCAO;
+        }
+        return MovimentoTipo.RECUO_PRODUCAO;
     }
 
     @Transactional
@@ -190,6 +215,8 @@ public class PedidoQueryService {
             }
         }
         pedidosRepo.save(pedido);
+
+
         return true;
     }
 
