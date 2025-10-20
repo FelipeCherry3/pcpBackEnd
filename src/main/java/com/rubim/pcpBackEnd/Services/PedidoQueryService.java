@@ -162,6 +162,7 @@ public class PedidoQueryService {
 
         MovimentacaoSetorEntity movimentacao = new MovimentacaoSetorEntity();
         movimentacao.setPedido(pedido);
+        movimentacao.setUser(null);
         movimentacao.setSetorAntigo(pedido.getSetor());
         movimentacao.setSetorAtual(novoSetor);
         movimentacao.setDescricao(decideTipoMovimentacao(pedido.getSetor(), novoSetor.getId()));
