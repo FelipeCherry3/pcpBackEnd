@@ -30,7 +30,7 @@ public class MovimentacaoSetorEntity {
     private PedidosVendaEntity pedido;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_user", nullable = false,
+    @JoinColumn(name = "id_user",
             foreignKey = @ForeignKey(name = "fk_mov_user"))
     private UserFrontEntity user;
 
