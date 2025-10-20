@@ -40,9 +40,9 @@ public class MovimentacaoSetorEntity {
     private SetorEntity setorAntigo;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_setor_novo", nullable = false,
-            foreignKey = @ForeignKey(name = "fk_mov_setor_novo"))
-    private SetorEntity setorNovo;
+    @JoinColumn(name = "id_setor_atual", nullable = false,
+            foreignKey = @ForeignKey(name = "fk_mov_setor_atual"))
+    private SetorEntity setorAtual;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "descricao", nullable = false)

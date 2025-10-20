@@ -1,11 +1,13 @@
 package com.rubim.pcpBackEnd.Services;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
 import com.rubim.pcpBackEnd.Entity.MovimentacaoSetorEntity;
 import com.rubim.pcpBackEnd.repository.MovimentacaoSetorRepository;
 
+@Service
 public class MovimentacaoSetorService {
     @Autowired
     private MovimentacaoSetorRepository movimentacaoSetorRepository;
