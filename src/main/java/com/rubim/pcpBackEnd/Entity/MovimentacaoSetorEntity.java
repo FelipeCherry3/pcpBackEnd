@@ -34,8 +34,8 @@ public class MovimentacaoSetorEntity {
             foreignKey = @ForeignKey(name = "fk_mov_user"))
     private UserFrontEntity user;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_setor_antigo", nullable = false,
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_setor_antigo",
             foreignKey = @ForeignKey(name = "fk_mov_setor_antigo"))
     private SetorEntity setorAntigo;
 
