@@ -182,9 +182,9 @@ public class PedidoQueryService {
         Integer ordemAntigo = OrdemSetor.ORDEM_SETOR.getOrDefault(antigo.getId(), 0);
         Integer ordemAtual  = OrdemSetor.ORDEM_SETOR.getOrDefault(atualId, 0);
         if (ordemAtual >= ordemAntigo) {
-            return "RECUO PRODUÇÃO";
+            return "AVANÇO PRODUÇÃO";
         }
-        return "AVANÇO PRODUÇÃO";
+        return "RECUO PRODUÇÃO";
     }
 
     @Transactional
