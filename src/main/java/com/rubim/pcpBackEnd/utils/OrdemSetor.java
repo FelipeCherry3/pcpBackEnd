@@ -9,7 +9,8 @@ public class OrdemSetor {
             3L, 3,  // Montagem
             4L, 4,  // Tapeçaria
             5L, 5,  // Lustração
-            6L, 6   // Expedição
+            6L, 6,  // Expedição
+            7L, 7   // Entregue
             
     );
 }
