@@ -1,6 +1,7 @@
 package com.rubim.pcpBackEnd.controllers;
 
 import com.rubim.pcpBackEnd.DTO.AtualizarSetorDTO;
+import com.rubim.pcpBackEnd.DTO.BaixaPedidoDTO;
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
 import com.rubim.pcpBackEnd.Services.PedidoQueryService;
 import com.rubim.pcpBackEnd.Services.UserFrontService;
@@ -91,8 +92,12 @@ public class PedidoVendaQueryController {
     }
 
     @PutMapping("/marcarComoEntregue")
-    public ResponseEntity<?> marcarComoEntregue(@RequestBody List<Long> numerosPedidos) {
-        String resultado = service.atualizarPedidosEntreguesPorNumero(numerosPedidos);
+    public ResponseEntity<?> marcarComoEntregue(@RequestBody BaixaPedidoDTO dto) {
+        if (!userService.validateCarregarDados(dto.getPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Senha inválida"));
+        }
+        String resultado = service.atualizarPedidosEntreguesPorNumero(dto.getNumerosPedidos());
         if (resultado != null) {
             return ResponseEntity.ok(Map.of("message", resultado));
         }
