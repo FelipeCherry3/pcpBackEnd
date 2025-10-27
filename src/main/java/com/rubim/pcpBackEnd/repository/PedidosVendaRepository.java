@@ -17,4 +17,6 @@ public interface PedidosVendaRepository extends JpaRepository<PedidosVendaEntity
 
     @Query("select p.id from PedidosVendaEntity p where p.id in :ids")
     List<Long> findExistingIds(@Param("ids") Collection<Long> ids);
+
+    List<PedidosVendaEntity> findByNumeroIn(List<Long> numeros);
 }

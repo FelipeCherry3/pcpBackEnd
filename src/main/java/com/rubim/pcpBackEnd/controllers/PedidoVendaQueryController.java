@@ -89,5 +89,15 @@ public class PedidoVendaQueryController {
                 "idNovoSetor", dto.getIdNovoSetor()
         ));
     }
-    
+
+    @PutMapping("/marcarComoEntregue")
+    public ResponseEntity<?> marcarComoEntregue(@RequestBody List<Long> numerosPedidos) {
+        String resultado = service.atualizarPedidosEntreguesPorNumero(numerosPedidos);
+        if (resultado != null) {
+            return ResponseEntity.ok(Map.of("message", resultado));
+        }
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("message", "Nenhum pedido encontrado"));
+    }
+
 }

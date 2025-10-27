@@ -3,17 +3,24 @@ package com.rubim.pcpBackEnd.Services;
 import com.rubim.pcpBackEnd.Entity.PedidosVendaEntity;
 import com.rubim.pcpBackEnd.Entity.ProdutoDeVendaEntity;
 import com.rubim.pcpBackEnd.Entity.SetorEntity;
+import com.rubim.pcpBackEnd.Entity.SituacaoEntity;
 import com.rubim.pcpBackEnd.Entity.ContatoEntity;
 import com.rubim.pcpBackEnd.Entity.MovimentacaoSetorEntity;
 import com.rubim.pcpBackEnd.Entity.MovimentoTipo;
 import com.rubim.pcpBackEnd.repository.PedidosVendaRepository;
 import com.rubim.pcpBackEnd.repository.ProdutoRepository;
 import com.rubim.pcpBackEnd.repository.SetorRepository;
+import com.rubim.pcpBackEnd.repository.SituacaoRepository;
 import com.rubim.pcpBackEnd.utils.JsonParserUtil;
 import com.rubim.pcpBackEnd.utils.OrdemSetor;
+
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+
 import com.rubim.pcpBackEnd.repository.MovimentacaoSetorRepository;
 // DTOs:
 import com.rubim.pcpBackEnd.DTO.PedidoVendaResponseDTO;
+import com.rubim.pcpBackEnd.DTO.PedidosDTO;
 import com.rubim.pcpBackEnd.DTO.ProdutoDTO;
 import com.rubim.pcpBackEnd.DTO.SetorDTO;
 import com.rubim.pcpBackEnd.DTO.ItemPedidoResponseDTO;
@@ -28,7 +35,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class PedidoQueryService {
@@ -37,16 +47,22 @@ public class PedidoQueryService {
 
     private final PedidosVendaRepository pedidosRepo;
     private final SetorRepository setorRepo;
+    private final SituacaoRepository situacaoRepo;
 
     private final MovimentacaoSetorRepository movimentacaoRepo;
     private final ProdutoRepository produtoRepo;
 
-    public PedidoQueryService(PedidosVendaRepository pedidosRepo, SetorRepository setorRepo, MovimentacaoSetorRepository movimentacaoRepo, ProdutoRepository produtoRepo) {
+    @PersistenceContext
+    private EntityManager entityManager;
+
+    public PedidoQueryService(PedidosVendaRepository pedidosRepo, SetorRepository setorRepo, SituacaoRepository situacaoRepo, MovimentacaoSetorRepository movimentacaoRepo, ProdutoRepository produtoRepo) {
         this.pedidosRepo = pedidosRepo;
         this.setorRepo = setorRepo;
+        this.situacaoRepo = situacaoRepo;
         this.movimentacaoRepo = movimentacaoRepo;
         this.produtoRepo = produtoRepo;
     }
+
 
     /**
      * Lista pedidos por período [dataInicial, dataFinal].
@@ -168,6 +184,77 @@ public class PedidoQueryService {
         dto.setNome(s.getNome());
         return dto;
     }
+
+   @Transactional
+    public String atualizarPedidosEntreguesPorNumero(List<Long> numerosPedidos) {
+
+        if (numerosPedidos == null || numerosPedidos.isEmpty()) {
+            return "Lista de números de pedidos vazia.";
+        }
+
+        // 1️⃣ Carrega setor e situação uma única vez
+        SetorEntity setorEntregue = setorRepo.findById(7L).orElse(null);
+        if (setorEntregue == null) return "Setor 'Entregue' (id=7) não encontrado.";
+
+        SituacaoEntity situacaoEntregue = situacaoRepo.findById(9L).orElse(null);
+        if (situacaoEntregue == null) return "Situação 'Entregue' (id=9) não encontrada.";
+
+        // 2️⃣ Busca todos os pedidos pelos NÚMEROS
+        List<PedidosVendaEntity> pedidosEncontrados = pedidosRepo.findByNumeroIn(numerosPedidos);
+
+        List<Long> numerosEncontrados = pedidosEncontrados.stream()
+                .map(PedidosVendaEntity::getNumero)
+                .toList();
+
+        List<Long> naoEncontrados = numerosPedidos.stream()
+                .filter(n -> !numerosEncontrados.contains(n))
+                .toList();
+
+        List<Long> atualizados = new ArrayList<>();
+        List<Long> ignorados = new ArrayList<>();
+        List<MovimentacaoSetorEntity> movimentacoes = new ArrayList<>();
+        List<PedidosVendaEntity> paraSalvar = new ArrayList<>();
+
+        // 3️⃣ Itera sobre os pedidos encontrados
+        for (PedidosVendaEntity pedido : pedidosEncontrados) {
+
+            Long situacaoAtualId = (pedido.getSituacao().getId());
+            if (!situacaoAtualId.equals(6L)) { // 6L = "Em Aberto"
+                ignorados.add(pedido.getNumero());
+                continue; // pula para o próximo pedido
+            }
+            String desc = decideTipoMovimentacao(pedido.getSetor(), setorEntregue.getId());
+
+            // Cria a movimentação
+            MovimentacaoSetorEntity mov = new MovimentacaoSetorEntity();
+            mov.setPedido(pedido);
+            mov.setUser(null); // substitua por o user logado se necessário
+            mov.setSetorAntigo(pedido.getSetor() != null ? pedido.getSetor() : setorEntregue);
+            mov.setSetorAtual(setorEntregue);
+            mov.setDescricao(desc);
+            movimentacoes.add(mov);
+
+            // Atualiza o pedido
+            pedido.setDataSaida(LocalDate.now());
+            pedido.setSituacao(situacaoEntregue);
+            pedido.setSetor(setorEntregue);
+
+            paraSalvar.add(pedido);
+            atualizados.add(pedido.getNumero());
+        }
+
+        // 4️⃣ Salva tudo em lote (na mesma transação)
+        if (!movimentacoes.isEmpty()) movimentacaoRepo.saveAll(movimentacoes);
+        if (!paraSalvar.isEmpty()) pedidosRepo.saveAll(paraSalvar);
+
+        // 5️⃣ Retorno
+        return String.format(
+                "Pedidos atualizados: %d | Ignorados (já não em situação 6): %d | Não encontrados: %d",
+                atualizados.size(), ignorados.size(), naoEncontrados.size()
+        );
+    }
+
+
 
     @Transactional
     public boolean atualizarSetorDePedido(Long idPedido, Long idSetorNovo) {
