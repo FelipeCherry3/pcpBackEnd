@@ -33,6 +33,8 @@ import java.util.Optional;
 @Service
 public class PedidoQueryService {
 
+    private static final Long SITUACAO_EM_ABERTO = 6L; // ID fixo para "Em Aberto"
+
     private final PedidosVendaRepository pedidosRepo;
     private final SetorRepository setorRepo;
 
@@ -54,9 +56,24 @@ public class PedidoQueryService {
     public List<PedidoVendaResponseDTO> listarPorPeriodo(LocalDate dataInicial, LocalDate dataFinal) {
         List<PedidosVendaEntity> pedidos = pedidosRepo.findAllByDataBetween(dataInicial, dataFinal);
         List<PedidoVendaResponseDTO> dtoList = new ArrayList<>(pedidos.size());
+        List<PedidosVendaEntity> pedidosFiltrados = new ArrayList<>(pedidos.size());
+
+        // Filtra apenas pedidos em aberto (id == SITUACAO_EM_ABERTO)
         for (PedidosVendaEntity p : pedidos) {
+            if (p != null 
+                && p.getSituacao() != null 
+                && p.getSituacao().getId() != null 
+                && p.getSituacao().getId().equals(SITUACAO_EM_ABERTO)) 
+            {
+                pedidosFiltrados.add(p);
+            }
+        }
+
+        // Converte para DTO
+        for (PedidosVendaEntity p : pedidosFiltrados) {
             dtoList.add(toDTO(p, /*incluirPedidoNoItem*/ false));
         }
+
         return dtoList;
     }
 
@@ -154,6 +171,7 @@ public class PedidoQueryService {
 
     @Transactional
     public boolean atualizarSetorDePedido(Long idPedido, Long idSetorNovo) {
+
         PedidosVendaEntity pedido = pedidosRepo.findById(idPedido).orElse(null);
         if (pedido == null) return false;
 
