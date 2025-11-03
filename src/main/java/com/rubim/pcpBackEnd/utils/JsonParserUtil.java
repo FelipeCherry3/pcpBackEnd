@@ -35,14 +35,23 @@ public class JsonParserUtil {
     // Converte para OffsetDateTime
     public static OffsetDateTime toOffsetDateTime(Object o, ZoneId zone) {
     if (o == null) return null;
+
     if (o instanceof OffsetDateTime odt) return odt;
     if (o instanceof ZonedDateTime zdt)  return zdt.toOffsetDateTime();
     if (o instanceof LocalDateTime ldt)  return ldt.atZone(zone).toOffsetDateTime();
     if (o instanceof java.sql.Timestamp ts) return ts.toInstant().atZone(zone).toOffsetDateTime();
+    if (o instanceof java.util.Date ud)  return ud.toInstant().atZone(zone).toOffsetDateTime();
     if (o instanceof java.sql.Date d)     return d.toLocalDate().atStartOfDay(zone).toOffsetDateTime();
     if (o instanceof LocalDate ld)        return ld.atStartOfDay(zone).toOffsetDateTime();
+    if (o instanceof String s) {
+        try { return OffsetDateTime.parse(s); } catch (Exception ignore) {}
+        try { return LocalDateTime.parse(s).atZone(zone).toOffsetDateTime(); } catch (Exception ignore) {}
         return null;
     }
+    // Debug opcional pra ver exatamente o que está vindo:
+    // System.out.println("DEBUG data tipo: " + o.getClass().getName() + " -> " + o);
+    return null;
+}
 
         /** Converte para Integer (aceita Number ou String). */
     public static Integer toInt(Object o) {
