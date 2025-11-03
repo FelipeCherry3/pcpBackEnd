@@ -47,7 +47,8 @@ public class RelatoriosService {
         long somaLeadTimeDias = 0;
         
         for(Object[] r : rows) {
-            String numero = (String) r[1];
+            Long id = JsonParserUtil.toLong(r[0]);
+            Long numero = JsonParserUtil.toLong(r[1]);
             String nomeCliente = (String) r[2];
 
             OffsetDateTime dataPedido = JsonParserUtil.toOffsetDateTime(r[3]);
