@@ -32,7 +32,7 @@ public class JsonParserUtil {
         return null;
     }
 
-    // Converte para OffsetDateTime
+    // Converte para OffsetDateTime (mais leniente; aceita vários tipos/formats)
     public static OffsetDateTime toOffsetDateTime(Object o, ZoneId zone) {
         if (o == null) return null;
 
@@ -41,16 +41,35 @@ public class JsonParserUtil {
         if (o instanceof LocalDateTime ldt)  return ldt.atZone(zone).toOffsetDateTime();
         if (o instanceof java.sql.Timestamp ts) return ts.toInstant().atZone(zone).toOffsetDateTime();
 
-        // ⚠️ cheque java.sql.Date ANTES de java.util.Date
+        // cheque java.sql.Date ANTES de java.util.Date
         if (o instanceof java.sql.Date d)     return d.toLocalDate().atStartOfDay(zone).toOffsetDateTime();
-        if (o instanceof LocalDate ld)        return ld.atStartOfDay(zone).toOffsetDateTime();
+        if (o instanceof java.time.LocalDate ld)        return ld.atStartOfDay(zone).toOffsetDateTime();
 
-        // só aqui trate java.util.Date genérico
+        // java.util.Date genérico
         if (o instanceof java.util.Date ud)   return ud.toInstant().atZone(zone).toOffsetDateTime();
 
         if (o instanceof String s) {
-            try { return OffsetDateTime.parse(s); } catch (Exception ignore) {}
-            try { return LocalDateTime.parse(s).atZone(zone).toOffsetDateTime(); } catch (Exception ignore) {}
+            String str = s.trim();
+            if (str.isEmpty()) return null;
+
+            // 1) OffsetDateTime padrão (com offset)
+            try { return OffsetDateTime.parse(str); } catch (Exception ignored) {}
+
+            // 2) ZonedDateTime com nome/fuso
+            try { return ZonedDateTime.parse(str).toOffsetDateTime(); } catch (Exception ignored) {}
+
+            // 3) LocalDateTime ISO (yyyy-MM-dd'T'HH:mm[:ss]) com o zone fornecido
+            try { return LocalDateTime.parse(str, ISO_DATE_TIME).atZone(zone).toOffsetDateTime(); } catch (Exception ignored) {}
+
+            // 4) Formato comum vindo do DB "yyyy-MM-dd HH:mm:ss" -> trocar espaço por 'T'
+            try { return LocalDateTime.parse(str.replace(' ', 'T'), ISO_DATE_TIME).atZone(zone).toOffsetDateTime(); } catch (Exception ignored) {}
+
+            // 5) Apenas data "yyyy-MM-dd" ou outros formatos lenientes
+            try {
+                java.time.LocalDate ld2 = toLocalDateLenient(str);
+                if (ld2 != null) return ld2.atStartOfDay(zone).toOffsetDateTime();
+            } catch (Exception ignored) {}
+
             return null;
         }
         return null;
