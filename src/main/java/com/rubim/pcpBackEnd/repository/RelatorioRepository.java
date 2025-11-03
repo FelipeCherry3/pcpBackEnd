@@ -24,30 +24,30 @@ public interface RelatorioRepository extends JpaRepository<PedidosVendaEntity, L
      *  5: total_pecas (Long)
      */
     @Query(value = """
-        WITH entregas AS (
-            SELECT DISTINCT ON (m.id_pedido)
-                   m.id_pedido,
-                   m.criado_em AS data_entrega
-              FROM public.movimento_setor m
-             WHERE m.id_setor_atual = 7
-               AND m.criado_em >= :inicio
-               AND m.criado_em <  :fim
-             ORDER BY m.id_pedido, m.criado_em DESC
-        )
-        SELECT 
-            p.id AS pedido_id,
-            p.numero,
-            COALESCE(c.nome, p.nome_cliente) AS nome_cliente,
-            p.data_pedido,
-            e.data_entrega,
-            SUM(iv.quantidade)::bigint AS total_pecas
-        FROM entregas e
-        JOIN public.pedidos_venda p ON p.id = e.id_pedido
-        LEFT JOIN public.contato c  ON c.id = p.contato_id
-        JOIN public.itens_venda iv   ON iv.pedido_id = p.id
-        GROUP BY p.id, p.numero, nome_cliente, p.data_pedido, e.data_entrega
-        ORDER BY e.data_entrega ASC
-        """, nativeQuery = true)
+    WITH entregas AS (
+        SELECT DISTINCT ON (m.id_pedido)
+               m.id_pedido,
+               m.criado_em AS data_entrega
+        FROM public.movimento_setor m
+        WHERE m.id_setor_atual = 7
+          AND m.criado_em >= :inicio
+          AND m.criado_em <  :fim
+        ORDER BY m.id_pedido, m.criado_em DESC
+    )
+    SELECT 
+        p.id                                    AS pedido_id,
+        p.numero                                AS numero,
+        c.nome                                   AS nome_cliente,
+        p.data_pedido                           AS data_pedido,
+        e.data_entrega                          AS data_entrega,
+        SUM(iv.quantidade)::bigint              AS total_pecas
+    FROM entregas e
+    JOIN public.pedidos_venda p   ON p.id = e.id_pedido
+    LEFT JOIN public.contato c     ON c.id = p.contato_id
+    JOIN public.itens_venda iv     ON iv.pedido_id = p.id
+    GROUP BY p.id, p.numero, c.nome, p.data_pedido, e.data_entrega
+    ORDER BY e.data_entrega ASC
+    """, nativeQuery = true)
     List<Object[]> listarPedidosEntreguesNoPeriodo(
             @Param("inicio") OffsetDateTime inicio,
             @Param("fim")    OffsetDateTime fim
