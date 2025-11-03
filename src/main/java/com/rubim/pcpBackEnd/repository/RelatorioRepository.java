@@ -39,7 +39,7 @@ public interface RelatorioRepository extends JpaRepository<PedidosVendaEntity, L
         p.numero                                AS numero,
         c.nome                                   AS nome_cliente,
         p.data                                  AS data_pedido,
-        (e.data_entrega)::timestamptz           AS data_entrega,
+        (e.data_entrega)::date           AS data_entrega,
         SUM(iv.quantidade)::bigint              AS total_pecas
     FROM entregas e
     JOIN public.pedidos_venda p   ON p.id = e.id_pedido
