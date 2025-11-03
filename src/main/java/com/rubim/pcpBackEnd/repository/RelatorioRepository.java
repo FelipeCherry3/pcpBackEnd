@@ -19,7 +19,7 @@ public interface RelatorioRepository extends JpaRepository<PedidosVendaEntity, L
      *  0: pedido_id (Long)
      *  1: numero (String)
      *  2: nome_cliente (String)
-     *  3: data_pedido (OffsetDateTime)
+     *  3: data (OffsetDateTime)
      *  4: data_entrega (OffsetDateTime)
      *  5: total_pecas (Long)
      */
@@ -45,7 +45,7 @@ public interface RelatorioRepository extends JpaRepository<PedidosVendaEntity, L
     JOIN public.pedidos_venda p   ON p.id = e.id_pedido
     LEFT JOIN public.contato c     ON c.id = p.contato_id
     JOIN public.itens_venda iv     ON iv.pedido_id = p.id
-    GROUP BY p.id, p.numero, c.nome, p.data_pedido, e.data_entrega
+    GROUP BY p.id, p.numero, c.nome, p.data, e.data_entrega
     ORDER BY e.data_entrega ASC
     """, nativeQuery = true)
     List<Object[]> listarPedidosEntreguesNoPeriodo(
