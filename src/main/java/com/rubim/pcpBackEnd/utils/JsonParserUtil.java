@@ -7,7 +7,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 
 public class JsonParserUtil {
 
@@ -32,49 +34,41 @@ public class JsonParserUtil {
         return null;
     }
 
-    // Converte para OffsetDateTime (mais leniente; aceita vários tipos/formats)
+        // formatter que entende "yyyy-MM-dd HH:mm:ss[.fraction]+HH" (ex: "+00")
+    private static final DateTimeFormatter PG_TS_TZ = new DateTimeFormatterBuilder()
+        .appendPattern("yyyy-MM-dd HH:mm:ss")
+        .optionalStart().appendFraction(ChronoField.NANO_OF_SECOND, 1, 9, true).optionalEnd()
+        // aceita +HH ou +HH:MM
+        .optionalStart().appendOffset("+HH:MM", "+00:00").optionalEnd()
+        .optionalStart().appendOffset("+HH",    "+00").optionalEnd()
+        .toFormatter();
+
     public static OffsetDateTime toOffsetDateTime(Object o, ZoneId zone) {
         if (o == null) return null;
 
         if (o instanceof OffsetDateTime odt) return odt;
-        if (o instanceof ZonedDateTime zdt)  return zdt.toOffsetDateTime();
-        if (o instanceof LocalDateTime ldt)  return ldt.atZone(zone).toOffsetDateTime();
-        if (o instanceof java.sql.Timestamp ts) return ts.toInstant().atZone(zone).toOffsetDateTime();
-
-        // cheque java.sql.Date ANTES de java.util.Date
-        if (o instanceof java.sql.Date d)     return d.toLocalDate().atStartOfDay(zone).toOffsetDateTime();
-        if (o instanceof java.time.LocalDate ld)        return ld.atStartOfDay(zone).toOffsetDateTime();
-
-        // java.util.Date genérico
-        if (o instanceof java.util.Date ud)   return ud.toInstant().atZone(zone).toOffsetDateTime();
+        if (o instanceof java.time.ZonedDateTime zdt)  return zdt.toOffsetDateTime();
+        if (o instanceof java.time.LocalDateTime ldt)  return ldt.atZone(zone).toOffsetDateTime();
+        if (o instanceof java.sql.Timestamp ts)        return ts.toInstant().atZone(zone).toOffsetDateTime();
+        if (o instanceof java.sql.Date d)              return d.toLocalDate().atStartOfDay(zone).toOffsetDateTime();
+        if (o instanceof java.time.LocalDate ld)       return ld.atStartOfDay(zone).toOffsetDateTime();
+        if (o instanceof java.util.Date ud)            return ud.toInstant().atZone(zone).toOffsetDateTime();
 
         if (o instanceof String s) {
-            String str = s.trim();
-            if (str.isEmpty()) return null;
-
-            // 1) OffsetDateTime padrão (com offset)
-            try { return OffsetDateTime.parse(str); } catch (Exception ignored) {}
-
-            // 2) ZonedDateTime com nome/fuso
-            try { return ZonedDateTime.parse(str).toOffsetDateTime(); } catch (Exception ignored) {}
-
-            // 3) LocalDateTime ISO (yyyy-MM-dd'T'HH:mm[:ss]) com o zone fornecido
-            try { return LocalDateTime.parse(str, ISO_DATE_TIME).atZone(zone).toOffsetDateTime(); } catch (Exception ignored) {}
-
-            // 4) Formato comum vindo do DB "yyyy-MM-dd HH:mm:ss" -> trocar espaço por 'T'
-            try { return LocalDateTime.parse(str.replace(' ', 'T'), ISO_DATE_TIME).atZone(zone).toOffsetDateTime(); } catch (Exception ignored) {}
-
-            // 5) Apenas data "yyyy-MM-dd" ou outros formatos lenientes
+            // 1) tenta ISO padrão
+            try { return OffsetDateTime.parse(s); } catch (Exception ignore) {}
+            // 2) tenta "yyyy-MM-dd HH:mm:ss[.n]+HH[:MM]" do Postgres
+            try { return OffsetDateTime.parse(s, PG_TS_TZ); } catch (DateTimeParseException ignore) {}
+            // 3) fallback: troca espaço por 'T' e normaliza +00 -> +00:00
             try {
-                java.time.LocalDate ld2 = toLocalDateLenient(str);
-                if (ld2 != null) return ld2.atStartOfDay(zone).toOffsetDateTime();
-            } catch (Exception ignored) {}
-
+                String norm = s.replace(' ', 'T').replaceAll("\\+([0-9]{2})(?!:)", "+$1:00");
+                return OffsetDateTime.parse(norm);
+            } catch (Exception ignore) {}
             return null;
         }
+
         return null;
     }
-
 
         /** Converte para Integer (aceita Number ou String). */
     public static Integer toInt(Object o) {
