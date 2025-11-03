@@ -33,12 +33,14 @@ public class JsonParserUtil {
     }
 
     // Converte para OffsetDateTime
-    public static OffsetDateTime toOffsetDateTime(Object o) {
-        if (o == null) return null;
-        if (o instanceof OffsetDateTime) return (OffsetDateTime) o;
-        if (o instanceof LocalDateTime) return ((LocalDateTime) o).atZone(ZoneId.systemDefault()).toOffsetDateTime();
-        if (o instanceof ZonedDateTime) return ((ZonedDateTime) o).toOffsetDateTime();
-        if (o instanceof java.sql.Timestamp) return ((java.sql.Timestamp) o).toInstant().atZone(ZoneId.systemDefault()).toOffsetDateTime();
+    public static OffsetDateTime toOffsetDateTime(Object o, ZoneId zone) {
+    if (o == null) return null;
+    if (o instanceof OffsetDateTime odt) return odt;
+    if (o instanceof ZonedDateTime zdt)  return zdt.toOffsetDateTime();
+    if (o instanceof LocalDateTime ldt)  return ldt.atZone(zone).toOffsetDateTime();
+    if (o instanceof java.sql.Timestamp ts) return ts.toInstant().atZone(zone).toOffsetDateTime();
+    if (o instanceof java.sql.Date d)     return d.toLocalDate().atStartOfDay(zone).toOffsetDateTime();
+    if (o instanceof LocalDate ld)        return ld.atStartOfDay(zone).toOffsetDateTime();
         return null;
     }
 

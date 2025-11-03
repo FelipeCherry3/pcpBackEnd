@@ -51,9 +51,9 @@ public class RelatoriosService {
             Long numero = JsonParserUtil.toLong(r[1]);
             String nomeCliente = (String) r[2];
 
-            OffsetDateTime dataPedido = JsonParserUtil.toOffsetDateTime(r[3]);
-            OffsetDateTime dataEntrega = JsonParserUtil.toOffsetDateTime(r[4]);
-            Long total = JsonParserUtil.toLong(r[5]);
+            OffsetDateTime dataPedido = JsonParserUtil.toOffsetDateTime(r[3], ZONE);
+            OffsetDateTime dataEntrega = JsonParserUtil.toOffsetDateTime(r[4], ZONE);
+            Long   quantidadePecas     = (r[5] instanceof Number) ? ((Number) r[5]).longValue() : 0L;
 
             long leadTimeDias = 0;
             if (dataPedido != null && dataEntrega != null) {
@@ -68,11 +68,11 @@ public class RelatoriosService {
                     nomeCliente,
                     dataPedido,
                     dataEntrega,
-                    total,
+                    quantidadePecas,
                     leadTimeDias
             ));
 
-            totalPecas += (total != null ? total : 0);
+            totalPecas += (quantidadePecas != null ? quantidadePecas : 0);
             somaLeadTimeDias += leadTimeDias;
         }
 
