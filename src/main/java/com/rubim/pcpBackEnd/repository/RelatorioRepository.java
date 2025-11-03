@@ -7,7 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-public interface RelatorioRepository extends JpaRepository<Object, Long> {
+import com.rubim.pcpBackEnd.Entity.PedidosVendaEntity;
+
+public interface RelatorioRepository extends JpaRepository<PedidosVendaEntity, Long> {
         /**
      * Retorna uma linha por pedido entregue no período.
      * - Considera apenas a ÚLTIMA baixa (setor 7) de cada pedido dentro do intervalo.
