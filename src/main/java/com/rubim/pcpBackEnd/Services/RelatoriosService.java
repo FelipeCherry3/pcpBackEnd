@@ -52,14 +52,14 @@ public class RelatoriosService {
             String nomeCliente = (String) r[2];
 
             OffsetDateTime dataPedido = JsonParserUtil.toOffsetDateTime(r[3], ZONE);
-            OffsetDateTime dataEntrega = JsonParserUtil.toOffsetDateTime(r[4], ZONE);
-            Long   quantidadePecas     = (r[5] instanceof Number) ? ((Number) r[5]).longValue() : 0L;
+            OffsetDateTime data_entrega = JsonParserUtil.toOffsetDateTime(r[4], ZONE);
+            Long   quantidadePecas     = JsonParserUtil.toLong(r[5]);
 
             long leadTimeDias = 0;
-            if (dataPedido != null && dataEntrega != null) {
+            if (dataPedido != null && data_entrega != null) {
                 leadTimeDias = ChronoUnit.DAYS.between(
                         dataPedido.toLocalDate(),
-                        dataEntrega.toLocalDate()
+                        data_entrega.toLocalDate()
                 );
             }
 
@@ -67,7 +67,7 @@ public class RelatoriosService {
                     numero,
                     nomeCliente,
                     dataPedido,
-                    dataEntrega,
+                    data_entrega,
                     quantidadePecas,
                     leadTimeDias
             ));

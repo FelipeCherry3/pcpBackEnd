@@ -15,7 +15,7 @@ public class RelatorioPedidosEntreguesRowDTO {
     private Long numeroPedido;
     private String nomeCliente;
     private OffsetDateTime dataPedido;
-    private OffsetDateTime dataEntrega;
+    private OffsetDateTime data_entrega;
     private Long quantidadePecas;
     private Long leadTimeDias;
 
