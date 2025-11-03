@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -30,6 +32,15 @@ public class JsonParserUtil {
         return null;
     }
 
+    // Converte para OffsetDateTime
+    public static OffsetDateTime toOffsetDateTime(Object o) {
+        if (o == null) return null;
+        if (o instanceof OffsetDateTime) return (OffsetDateTime) o;
+        if (o instanceof LocalDateTime) return ((LocalDateTime) o).atZone(ZoneId.systemDefault()).toOffsetDateTime();
+        if (o instanceof ZonedDateTime) return ((ZonedDateTime) o).toOffsetDateTime();
+        if (o instanceof java.sql.Timestamp) return ((java.sql.Timestamp) o).toInstant().atZone(ZoneId.systemDefault()).toOffsetDateTime();
+        return null;
+    }
 
         /** Converte para Integer (aceita Number ou String). */
     public static Integer toInt(Object o) {
