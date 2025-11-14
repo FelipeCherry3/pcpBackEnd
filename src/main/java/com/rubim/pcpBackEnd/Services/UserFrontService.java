@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.rubim.pcpBackEnd.Entity.UserFrontEntity;
+import com.rubim.pcpBackEnd.Entity.user.UserFrontEntity;
 import com.rubim.pcpBackEnd.repository.UserFrontRepository;
 
 @Service

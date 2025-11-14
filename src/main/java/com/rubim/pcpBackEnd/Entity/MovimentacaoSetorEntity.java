@@ -4,6 +4,8 @@ import java.time.OffsetDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
 
+import com.rubim.pcpBackEnd.Entity.user.UserFrontEntity;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
