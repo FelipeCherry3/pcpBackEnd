@@ -1,5 +1,6 @@
 package com.rubim.pcpBackEnd.configuration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -33,7 +34,10 @@ import java.util.List;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final UserDetailsService userDetailsService;
+
+    @Autowired
+    private final SecurityFilter securityFilter;
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -49,7 +53,7 @@ public class SecurityConfig {
                 .requestMatchers("/actuator/health", "v3/api-docs/**", "swagger-ui/**", "swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
             )
-            
+            .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
     }
 

@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.rubim.pcpBackEnd.Entity.user.UserFrontEntity;
+import com.rubim.pcpBackEnd.Services.JwtService;
 import com.rubim.pcpBackEnd.repository.UserFrontRepository;
 
 import io.micrometer.core.ipc.http.HttpSender.Response;
@@ -24,13 +25,18 @@ public class AuthenticationController {
     @Autowired
     private UserFrontRepository repository;
 
+    @Autowired
+    private JwtService jwtService;
+
     @PostMapping("/login")
     public ResponseEntity login(@RequestBody AuthDTO data) {
 
         var usernamePassword = new UsernamePasswordAuthenticationToken(data.login(), data.password());
         var auth = this.authenticationManager.authenticate(usernamePassword);
 
-        return ResponseEntity.ok().build();
+        var token = jwtService.generateToken( (UserFrontEntity) auth.getPrincipal());
+        
+        return ResponseEntity.ok(new LoginResponseDTO(token));
     }
 
     @PostMapping("/registrar")
