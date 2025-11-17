@@ -65,7 +65,8 @@ public class SecurityConfig {
         // se usar proxy do Vite, pode deixar * (pois a chamada chega como mesma origem)
 
         cfg.setAllowedOrigins(List.of("https://produ-o-rubim-production.up.railway.app",
-                                    "https://front-end-login-test-production.up.railway.app"));
+                                    "https://front-end-login-test-production.up.railway.app"
+                                    ));
         cfg.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("Authorization","Content-Type","X-Requested-With","Accept","Origin", "Bearer "));
         cfg.setExposedHeaders(List.of("Authorization"));

@@ -29,12 +29,15 @@ public class BlingAuthController {
 
     @GetMapping("/authorize")
     public Mono<String> initiateAuthorization() {
+        // Gerar state único para evitar CSRF
+        String state = generateState();
         
         // Construir URL de autorização
         String authorizationUrl = UriComponentsBuilder
             .fromHttpUrl("https://bling.com.br/Api/v3/oauth/authorize")
             .queryParam("response_type", "code")
             .queryParam("client_id", clientId)
+            .queryParam("state", state)
             .build()
             .toUriString();
 
@@ -56,6 +59,12 @@ public class BlingAuthController {
             .map(token -> "Token salvo com sucesso: " + token.getAccessToken() + ", State: " + state);
     }
 
+    private String generateState() {
+        SecureRandom random = new SecureRandom();
+        byte[] bytes = new byte[24];
+        random.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
 
     @GetMapping("/produtos")
     public Mono<Map> getProdutos() {
